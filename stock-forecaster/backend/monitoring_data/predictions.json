@@ -1,0 +1,283 @@
+{
+  "AAPL_2025-11-10T11:30:00-05:00": [
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:27:06.146901",
+      "target_time": "2025-11-10T11:30:00-05:00",
+      "predicted_value": 271.09653367890786,
+      "actual_value": 269.1000061035156,
+      "evaluated": true,
+      "error": 1.9965275753922356,
+      "pct_error": 0.7419277332250318,
+      "evaluation_time": "2025-11-10T21:31:32.093878"
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:27:06.598Z",
+      "target_time": "2025-11-10T11:30:00-05:00",
+      "predicted_value": 271.09653367890786,
+      "actual_value": 269.1000061035156,
+      "evaluated": true,
+      "error": 1.9965275753922356,
+      "pct_error": 0.7419277332250318,
+      "evaluation_time": "2025-11-10T21:31:32.093878"
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:27:46.558189",
+      "target_time": "2025-11-10T11:30:00-05:00",
+      "predicted_value": 271.182499877428,
+      "actual_value": 269.1000061035156,
+      "evaluated": true,
+      "error": 2.082493773912347,
+      "pct_error": 0.773873551348515,
+      "evaluation_time": "2025-11-10T21:31:32.094876"
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:27:46.960Z",
+      "target_time": "2025-11-10T11:30:00-05:00",
+      "predicted_value": 271.182499877428,
+      "actual_value": 269.1000061035156,
+      "evaluated": true,
+      "error": 2.082493773912347,
+      "pct_error": 0.773873551348515,
+      "evaluation_time": "2025-11-10T21:31:32.094876"
+    }
+  ],
+  "AAPL_2025-11-10T12:30:00-05:00": [
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:31:31.673Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 271.0774861345485,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:36:20.311046",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 270.9005951202282,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:36:20.743Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 270.9005951202282,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:37:10.643162",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 271.19042153485395,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "lstm",
+      "prediction_time": "2025-11-10T16:37:11.063Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 271.19042153485395,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "LSTM",
+      "prediction_time": "2025-11-10T21:37:31.917155",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 272.8938824795368,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:37:32.340Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 272.8938824795368,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:38:24.065795",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 270.9221069780565,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:38:24.569Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 270.9221069780565,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:39:38.937032",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 270.9113403296558,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:39:39.332Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 270.9113403296558,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "MSFT_2025-11-10T12:30:00-05:00": [
+    {
+      "symbol": "MSFT",
+      "model": "arima",
+      "prediction_time": "2025-11-10T16:32:40.708Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 500.31445955247335,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "MSFT",
+      "model": "arima",
+      "prediction_time": "2025-11-10T16:32:57.800Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 501.8070510458223,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "MSFT_2025-11-10T13:30:00-05:00": [
+    {
+      "symbol": "MSFT",
+      "model": "arima",
+      "prediction_time": "2025-11-10T16:32:40.708Z",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 500.22207443933524,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "MSFT",
+      "model": "arima",
+      "prediction_time": "2025-11-10T16:32:57.800Z",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 501.64868443188584,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "MSFT_2025-11-10T14:30:00-05:00": [
+    {
+      "symbol": "MSFT",
+      "model": "arima",
+      "prediction_time": "2025-11-10T16:32:40.708Z",
+      "target_time": "2025-11-10T14:30:00-05:00",
+      "predicted_value": 500.13667478608505,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "MSFT",
+      "model": "arima",
+      "prediction_time": "2025-11-10T16:32:57.800Z",
+      "target_time": "2025-11-10T14:30:00-05:00",
+      "predicted_value": 501.5643536850619,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "AAPL_2025-11-10T13:30:00-05:00": [
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:39:39.332Z",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 270.9586598532039,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "AAPL_2025-11-10T14:30:00-05:00": [
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:39:39.332Z",
+      "target_time": "2025-11-10T14:30:00-05:00",
+      "predicted_value": 271.03812694065135,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "TSLA_2025-11-10T12:30:00-05:00": [
+    {
+      "symbol": "TSLA",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T21:42:11.057311",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 446.32974149497744,
+      "actual_value": 446.5669860839844,
+      "evaluated": true,
+      "error": 0.23724458900693435,
+      "pct_error": 0.05312631618547738,
+      "evaluation_time": "2025-11-10T22:32:36.710279"
+    },
+    {
+      "symbol": "TSLA",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:42:11.723Z",
+      "target_time": "2025-11-10T12:30:00-05:00",
+      "predicted_value": 446.32974149497744,
+      "actual_value": 446.5669860839844,
+      "evaluated": true,
+      "error": 0.23724458900693435,
+      "pct_error": 0.05312631618547738,
+      "evaluation_time": "2025-11-10T22:32:36.710279"
+    }
+  ],
+  "TSLA_2025-11-10T13:30:00-05:00": [
+    {
+      "symbol": "TSLA",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:42:11.723Z",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 446.44161868743396,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ],
+  "TSLA_2025-11-10T14:30:00-05:00": [
+    {
+      "symbol": "TSLA",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T16:42:11.723Z",
+      "target_time": "2025-11-10T14:30:00-05:00",
+      "predicted_value": 446.5081819909811,
+      "actual_value": null,
+      "evaluated": false
+    }
+  ]
+}

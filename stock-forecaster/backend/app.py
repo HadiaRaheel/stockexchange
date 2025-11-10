@@ -20,6 +20,7 @@ from models.ensemble import EnsembleForecaster
 from models.adaptive_learner import AdaptiveLearner
 from models.online_learner import OnlineLSTM, AdaptiveEnsemble
 
+from models.continuous_monitor import ContinuousMonitor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,8 @@ ensemble_model = EnsembleForecaster()
 
 adaptive_learner = AdaptiveLearner()
 online_lstm = OnlineLSTM()
+
+continuous_monitor = ContinuousMonitor()
 
 # Minimum data points required
 MIN_DATA_POINTS = 50
@@ -183,6 +186,376 @@ def get_historical_data(symbol):
         return jsonify({
             'success': False, 
             'error': f'Server error while fetching data: {str(e)}'
+        }), 500
+
+
+# @app.route('/api/forecast', methods=['POST'])
+# def generate_forecast():
+#     """Generate forecast for given symbol and horizon"""
+#     try:
+#         data = request.json
+        
+#         # Validate input
+#         if not data:
+#             return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+#         symbol = data.get('symbol')
+#         horizon = data.get('horizon')
+#         model_type = data.get('model', 'ensemble')
+        
+#         if not symbol:
+#             return jsonify({'success': False, 'error': 'Symbol is required'}), 400
+        
+#         try:
+#             horizon = int(horizon)
+#             if horizon <= 0 or horizon > 168:  # Max 1 week
+#                 return jsonify({'success': False, 'error': 'Horizon must be between 1 and 168 hours'}), 400
+#         except (ValueError, TypeError):
+#             return jsonify({'success': False, 'error': 'Invalid horizon value'}), 400
+        
+#         logger.info(f"\n{'='*50}")
+#         logger.info(f"Generating {model_type.upper()} forecast")
+#         logger.info(f"Symbol: {symbol} | Horizon: {horizon}h")
+#         logger.info(f"{'='*50}")
+        
+#         # Get historical data
+#         interval = '1h' if horizon <= 24 else '1d'
+#         df = data_fetcher.fetch_historical_data(symbol, period='1y', interval=interval)
+        
+#         if df is None or df.empty:
+#             return jsonify({
+#                 'success': False, 
+#                 'error': f'No historical data available for {symbol}'
+#             }), 404
+        
+#         # Prepare data
+#         prices = df['Close'].values
+        
+#         # Validate data
+#         is_valid, message = validate_data(prices)
+#         if not is_valid:
+#             return jsonify({'success': False, 'error': message}), 400
+        
+#         logger.info(f"Using {len(prices)} historical prices")
+#         logger.info(f"Price range: ${prices.min():.2f} - ${prices.max():.2f}")
+#         logger.info(f"Last price: ${prices[-1]:.2f}")
+        
+#         # Generate forecasts based on model type
+#         logger.info(f"\n  Training {model_type.upper()} model...")
+        
+#         try:
+#             if model_type == 'arima':
+#                 forecast = arima_model.predict(prices, horizon)
+#                 model_name = 'ARIMA'
+#             elif model_type == 'lstm':
+#                 forecast = lstm_model.predict(prices, horizon)
+#                 model_name = 'LSTM'
+#             else:  # ensemble
+#                 forecast = ensemble_model.predict(prices, horizon)
+#                 model_name = 'Ensemble'
+#         except Exception as model_error:
+#             logger.error(f"Model {model_type} failed: {model_error}")
+#             logger.error(traceback.format_exc())
+#             return jsonify({
+#                 'success': False, 
+#                 'error': f'Model training failed: {str(model_error)}'
+#             }), 500
+        
+#         # Validate forecast
+#         if forecast is None or len(forecast) == 0:
+#             return jsonify({
+#                 'success': False, 
+#                 'error': 'Model failed to generate valid predictions'
+#             }), 500
+        
+#         # Ensure forecast has correct length
+#         if len(forecast) != horizon:
+#             logger.warning(f"Forecast length mismatch: expected {horizon}, got {len(forecast)}")
+#             if len(forecast) < horizon:
+#                 # Pad with last value
+#                 forecast = np.concatenate([forecast, np.full(horizon - len(forecast), forecast[-1])])
+#             else:
+#                 # Truncate
+#                 forecast = forecast[:horizon]
+        
+#         logger.info(f"Forecast generated: {len(forecast)} points")
+#         logger.info(f"Predicted range: ${forecast.min():.2f} - ${forecast.max():.2f}")
+        
+#         # Calculate metrics using walk-forward validation approach
+#         # Use the last 'horizon' points from historical data as validation
+#         if len(prices) > horizon:
+#             # Split: use all but last 'horizon' points for training, last 'horizon' for validation
+#             validation_size = min(horizon, len(prices) // 5)  # Max 20% for validation
+#             train_prices = prices[:-validation_size]
+#             validation_prices = prices[-validation_size:]
+            
+#             # Generate predictions on validation set
+#             try:
+#                 if model_type == 'arima':
+#                     validation_pred = arima_model.predict(train_prices, validation_size)
+#                 elif model_type == 'lstm':
+#                     validation_pred = lstm_model.predict(train_prices, validation_size)
+#                 else:
+#                     validation_pred = ensemble_model.predict(train_prices, validation_size)
+                
+#                 metrics = calculate_metrics(validation_prices, validation_pred)
+#             except Exception as e:
+#                 logger.warning(f"Could not calculate validation metrics: {e}")
+#                 metrics = None
+#         else:
+#             metrics = None
+        
+#         if metrics:
+#             logger.info(f"\n Validation Metrics:")
+#             logger.info(f"  RMSE: ${metrics['rmse']:.2f}")
+#             logger.info(f"  MAE: ${metrics['mae']:.2f}")
+#             if metrics['mape']:
+#                 logger.info(f"  MAPE: {metrics['mape']:.2f}%")
+#         else:
+#             logger.info("\n Metrics: Not available (insufficient validation data)")
+#             metrics = {'rmse': None, 'mae': None, 'mape': None}
+        
+#         logger.info(f"{'='*50}\n")
+        
+#         # Create forecast timestamps
+#         last_timestamp = df.index[-1]
+#         forecast_timestamps = []
+        
+#         for i in range(1, horizon + 1):
+#             if horizon <= 24:
+#                 timestamp = last_timestamp + timedelta(hours=i)
+#             else:
+#                 timestamp = last_timestamp + timedelta(days=i)
+#             forecast_timestamps.append(timestamp.isoformat())
+        
+#         # Store forecast in database
+#         forecast_data = {
+#             'symbol': symbol,
+#             'model': model_name,
+#             'horizon': horizon,
+#             'timestamp': datetime.now().isoformat(),
+#             'predictions': [float(x) for x in forecast],
+#             'metrics': metrics
+#         }
+        
+#         try:
+#             db.store_forecast(forecast_data)
+#         except Exception as db_error:
+#             logger.warning(f"Could not store forecast in database: {db_error}")
+        
+#         # Format response
+#         forecast_points = [{
+#             'x': forecast_timestamps[i],
+#             'y': float(forecast[i])
+#         } for i in range(len(forecast))]
+        
+#         return jsonify({
+#             'success': True,
+#             'forecast': forecast_points,
+#             'metrics': metrics,
+#             'model': model_name
+#         })
+    
+#     except Exception as e:
+#         logger.error(f"\nForecast error: {str(e)}")
+#         logger.error(traceback.format_exc())
+#         return jsonify({
+#             'success': False, 
+#             'error': f'An unexpected error occurred: {str(e)}'
+#         }), 500
+
+@app.route('/api/forecast', methods=['POST'])
+def generate_forecast():
+    """Generate forecast for given symbol and horizon"""
+    try:
+        data = request.json
+        
+        # Validate input
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        symbol = data.get('symbol')
+        horizon = data.get('horizon')
+        model_type = data.get('model', 'ensemble')
+        
+        if not symbol:
+            return jsonify({'success': False, 'error': 'Symbol is required'}), 400
+        
+        try:
+            horizon = int(horizon)
+            if horizon <= 0 or horizon > 168:  # Max 1 week
+                return jsonify({'success': False, 'error': 'Horizon must be between 1 and 168 hours'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'error': 'Invalid horizon value'}), 400
+        
+        logger.info(f"\n{'='*50}")
+        logger.info(f"Generating {model_type.upper()} forecast")
+        logger.info(f"Symbol: {symbol} | Horizon: {horizon}h")
+        logger.info(f"{'='*50}")
+        
+        # Get historical data
+        interval = '1h' if horizon <= 24 else '1d'
+        df = data_fetcher.fetch_historical_data(symbol, period='1y', interval=interval)
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False, 
+                'error': f'No historical data available for {symbol}'
+            }), 404
+        
+        # Prepare data
+        prices = df['Close'].values
+        
+        # Validate data
+        is_valid, message = validate_data(prices)
+        if not is_valid:
+            return jsonify({'success': False, 'error': message}), 400
+        
+        logger.info(f"Using {len(prices)} historical prices")
+        logger.info(f"Price range: ${prices.min():.2f} - ${prices.max():.2f}")
+        logger.info(f"Last price: ${prices[-1]:.2f}")
+        
+        # Generate forecasts based on model type
+        logger.info(f"\n  Training {model_type.upper()} model...")
+        
+        try:
+            if model_type == 'arima':
+                forecast = arima_model.predict(prices, horizon)
+                model_name = 'ARIMA'
+            elif model_type == 'lstm':
+                forecast = lstm_model.predict(prices, horizon)
+                model_name = 'LSTM'
+            else:  # ensemble
+                forecast = ensemble_model.predict(prices, horizon)
+                model_name = 'Ensemble'
+        except Exception as model_error:
+            logger.error(f"Model {model_type} failed: {model_error}")
+            logger.error(traceback.format_exc())
+            return jsonify({
+                'success': False, 
+                'error': f'Model training failed: {str(model_error)}'
+            }), 500
+        
+        # Validate forecast
+        if forecast is None or len(forecast) == 0:
+            return jsonify({
+                'success': False, 
+                'error': 'Model failed to generate valid predictions'
+            }), 500
+        
+        # Ensure forecast has correct length
+        if len(forecast) != horizon:
+            logger.warning(f"Forecast length mismatch: expected {horizon}, got {len(forecast)}")
+            if len(forecast) < horizon:
+                forecast = np.concatenate([forecast, np.full(horizon - len(forecast), forecast[-1])])
+            else:
+                forecast = forecast[:horizon]
+        
+        logger.info(f"Forecast generated: {len(forecast)} points")
+        logger.info(f"Predicted range: ${forecast.min():.2f} - ${forecast.max():.2f}")
+        
+        # Calculate metrics using walk-forward validation
+        if len(prices) > horizon:
+            validation_size = min(horizon, len(prices) // 5)
+            train_prices = prices[:-validation_size]
+            validation_prices = prices[-validation_size:]
+            
+            try:
+                if model_type == 'arima':
+                    validation_pred = arima_model.predict(train_prices, validation_size)
+                elif model_type == 'lstm':
+                    validation_pred = lstm_model.predict(train_prices, validation_size)
+                else:
+                    validation_pred = ensemble_model.predict(train_prices, validation_size)
+                
+                metrics = calculate_metrics(validation_prices, validation_pred)
+            except Exception as e:
+                logger.warning(f"Could not calculate validation metrics: {e}")
+                metrics = None
+        else:
+            metrics = None
+        
+        if metrics:
+            logger.info(f"\n Validation Metrics:")
+            logger.info(f"  RMSE: ${metrics['rmse']:.2f}")
+            logger.info(f"  MAE: ${metrics['mae']:.2f}")
+            if metrics['mape']:
+                logger.info(f"  MAPE: {metrics['mape']:.2f}%")
+        else:
+            logger.info("\n Metrics: Not available (insufficient validation data)")
+            metrics = {'rmse': None, 'mae': None, 'mape': None}
+        
+        logger.info(f"{'='*50}\n")
+        
+        # Create forecast timestamps
+        last_timestamp = df.index[-1]
+        forecast_timestamps = []
+        for i in range(1, horizon + 1):
+            if horizon <= 24:
+                timestamp = last_timestamp + timedelta(hours=i)
+            else:
+                timestamp = last_timestamp + timedelta(days=i)
+            forecast_timestamps.append(timestamp.isoformat())
+        
+        # ========================
+        # AUTO-EVALUATE AND STORE FORECAST
+        # ========================
+        try:
+            forecast_dict = [{
+                'x': forecast_timestamps[i],
+                'y': float(forecast[i])
+            } for i in range(len(forecast))]
+            
+            continuous_monitor.store_prediction(
+                symbol=symbol,
+                model_name=model_name,
+                prediction_time=datetime.now().isoformat(),
+                target_time=forecast_timestamps[0],
+                predicted_value=float(forecast[0])
+            )
+            
+            # Auto-evaluate against recent data
+            df_for_eval = data_fetcher.fetch_historical_data(symbol, period='1mo', interval=interval)
+            if df_for_eval is not None and not df_for_eval.empty:
+                eval_results = continuous_monitor.evaluate_predictions(symbol, df_for_eval)
+                logger.info(f"Auto-evaluated {eval_results['evaluated_count']} predictions")
+        except Exception as e:
+            logger.warning(f"Could not store/evaluate predictions: {e}")
+        # ========================
+        
+        # Store forecast in database
+        forecast_data = {
+            'symbol': symbol,
+            'model': model_name,
+            'horizon': horizon,
+            'timestamp': datetime.now().isoformat(),
+            'predictions': [float(x) for x in forecast],
+            'metrics': metrics
+        }
+        try:
+            db.store_forecast(forecast_data)
+        except Exception as db_error:
+            logger.warning(f"Could not store forecast in database: {db_error}")
+        
+        # Format response
+        forecast_points = [{
+            'x': forecast_timestamps[i],
+            'y': float(forecast[i])
+        } for i in range(len(forecast))]
+        
+        return jsonify({
+            'success': True,
+            'forecast': forecast_points,
+            'metrics': metrics,
+            'model': model_name
+        })
+    
+    except Exception as e:
+        logger.error(f"\nForecast error: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False, 
+            'error': f'An unexpected error occurred: {str(e)}'
         }), 500
 
 # NEW ROUTE 1: Incremental model update
@@ -537,288 +910,341 @@ def cleanup_old_models():
             'error': str(e)
         }), 500
 
-@app.route('/api/forecast', methods=['POST'])
-def generate_forecast():
-    """Generate forecast for given symbol and horizon"""
+# ROUTE 1: Store predictions for continuous evaluation
+@app.route('/api/store-prediction', methods=['POST'])
+def store_prediction():
+    """
+    Store a prediction for future continuous evaluation
+    """
     try:
         data = request.json
         
-        # Validate input
-        if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
-        
         symbol = data.get('symbol')
-        horizon = data.get('horizon')
-        model_type = data.get('model', 'ensemble')
+        model_name = data.get('model')
+        prediction_time = data.get('prediction_time', datetime.now().isoformat())
+        forecasts = data.get('forecasts')  # List of {time, value} dicts
         
-        if not symbol:
-            return jsonify({'success': False, 'error': 'Symbol is required'}), 400
-        
-        try:
-            horizon = int(horizon)
-            if horizon <= 0 or horizon > 168:  # Max 1 week
-                return jsonify({'success': False, 'error': 'Horizon must be between 1 and 168 hours'}), 400
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'error': 'Invalid horizon value'}), 400
-        
-        logger.info(f"\n{'='*50}")
-        logger.info(f"Generating {model_type.upper()} forecast")
-        logger.info(f"Symbol: {symbol} | Horizon: {horizon}h")
-        logger.info(f"{'='*50}")
-        
-        # Get historical data
-        interval = '1h' if horizon <= 24 else '1d'
-        df = data_fetcher.fetch_historical_data(symbol, period='1y', interval=interval)
-        
-        if df is None or df.empty:
+        if not all([symbol, model_name, forecasts]):
             return jsonify({
-                'success': False, 
-                'error': f'No historical data available for {symbol}'
-            }), 404
-        
-        # Prepare data
-        prices = df['Close'].values
-        
-        # Validate data
-        is_valid, message = validate_data(prices)
-        if not is_valid:
-            return jsonify({'success': False, 'error': message}), 400
-        
-        logger.info(f"Using {len(prices)} historical prices")
-        logger.info(f"Price range: ${prices.min():.2f} - ${prices.max():.2f}")
-        logger.info(f"Last price: ${prices[-1]:.2f}")
-        
-        # Generate forecasts based on model type
-        logger.info(f"\n  Training {model_type.upper()} model...")
-        
-        try:
-            if model_type == 'arima':
-                forecast = arima_model.predict(prices, horizon)
-                model_name = 'ARIMA'
-            elif model_type == 'lstm':
-                forecast = lstm_model.predict(prices, horizon)
-                model_name = 'LSTM'
-            else:  # ensemble
-                forecast = ensemble_model.predict(prices, horizon)
-                model_name = 'Ensemble'
-        except Exception as model_error:
-            logger.error(f"Model {model_type} failed: {model_error}")
-            logger.error(traceback.format_exc())
-            return jsonify({
-                'success': False, 
-                'error': f'Model training failed: {str(model_error)}'
-            }), 500
-        
-        # Validate forecast
-        if forecast is None or len(forecast) == 0:
-            return jsonify({
-                'success': False, 
-                'error': 'Model failed to generate valid predictions'
-            }), 500
-        
-        # Ensure forecast has correct length
-        if len(forecast) != horizon:
-            logger.warning(f"Forecast length mismatch: expected {horizon}, got {len(forecast)}")
-            if len(forecast) < horizon:
-                # Pad with last value
-                forecast = np.concatenate([forecast, np.full(horizon - len(forecast), forecast[-1])])
-            else:
-                # Truncate
-                forecast = forecast[:horizon]
-        
-        logger.info(f"Forecast generated: {len(forecast)} points")
-        logger.info(f"Predicted range: ${forecast.min():.2f} - ${forecast.max():.2f}")
-        
-        # Calculate metrics using walk-forward validation approach
-        # Use the last 'horizon' points from historical data as validation
-        if len(prices) > horizon:
-            # Split: use all but last 'horizon' points for training, last 'horizon' for validation
-            validation_size = min(horizon, len(prices) // 5)  # Max 20% for validation
-            train_prices = prices[:-validation_size]
-            validation_prices = prices[-validation_size:]
-            
-            # Generate predictions on validation set
-            try:
-                if model_type == 'arima':
-                    validation_pred = arima_model.predict(train_prices, validation_size)
-                elif model_type == 'lstm':
-                    validation_pred = lstm_model.predict(train_prices, validation_size)
-                else:
-                    validation_pred = ensemble_model.predict(train_prices, validation_size)
-                
-                metrics = calculate_metrics(validation_prices, validation_pred)
-            except Exception as e:
-                logger.warning(f"Could not calculate validation metrics: {e}")
-                metrics = None
-        else:
-            metrics = None
-        
-        if metrics:
-            logger.info(f"\n Validation Metrics:")
-            logger.info(f"  RMSE: ${metrics['rmse']:.2f}")
-            logger.info(f"  MAE: ${metrics['mae']:.2f}")
-            if metrics['mape']:
-                logger.info(f"  MAPE: {metrics['mape']:.2f}%")
-        else:
-            logger.info("\n Metrics: Not available (insufficient validation data)")
-            metrics = {'rmse': None, 'mae': None, 'mape': None}
-        
-        logger.info(f"{'='*50}\n")
-        
-        # Create forecast timestamps
-        last_timestamp = df.index[-1]
-        forecast_timestamps = []
-        
-        for i in range(1, horizon + 1):
-            if horizon <= 24:
-                timestamp = last_timestamp + timedelta(hours=i)
-            else:
-                timestamp = last_timestamp + timedelta(days=i)
-            forecast_timestamps.append(timestamp.isoformat())
-        
-        # Store forecast in database
-        forecast_data = {
-            'symbol': symbol,
-            'model': model_name,
-            'horizon': horizon,
-            'timestamp': datetime.now().isoformat(),
-            'predictions': [float(x) for x in forecast],
-            'metrics': metrics
-        }
-        
-        try:
-            db.store_forecast(forecast_data)
-        except Exception as db_error:
-            logger.warning(f"Could not store forecast in database: {db_error}")
-        
-        # Format response
-        forecast_points = [{
-            'x': forecast_timestamps[i],
-            'y': float(forecast[i])
-        } for i in range(len(forecast))]
-        
-        return jsonify({
-            'success': True,
-            'forecast': forecast_points,
-            'metrics': metrics,
-            'model': model_name
-        })
-    
-    except Exception as e:
-        logger.error(f"\nForecast error: {str(e)}")
-        logger.error(traceback.format_exc())
-        return jsonify({
-            'success': False, 
-            'error': f'An unexpected error occurred: {str(e)}'
-        }), 500
-
-
-@app.route('/api/compare-models', methods=['POST'])
-def compare_models():
-    """Compare performance of different models"""
-    try:
-        data = request.json
-        
-        if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
-        
-        symbol = data.get('symbol')
-        horizon = data.get('horizon')
-        
-        if not symbol:
-            return jsonify({'success': False, 'error': 'Symbol is required'}), 400
-        
-        try:
-            horizon = int(horizon)
-            if horizon <= 0 or horizon > 168:
-                return jsonify({'success': False, 'error': 'Horizon must be between 1 and 168 hours'}), 400
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'error': 'Invalid horizon value'}), 400
-        
-        logger.info(f"\n{'='*50}")
-        logger.info(f"Comparing all models for {symbol}")
-        logger.info(f"Horizon: {horizon}h")
-        logger.info(f"{'='*50}\n")
-        
-        # Get historical data
-        interval = '1h' if horizon <= 24 else '1d'
-        df = data_fetcher.fetch_historical_data(symbol, period='1y', interval=interval)
-        
-        if df is None or df.empty:
-            return jsonify({
-                'success': False, 
-                'error': f'No historical data available for {symbol}'
-            }), 404
-        
-        prices = df['Close'].values
-        
-        # Validate data
-        is_valid, message = validate_data(prices)
-        if not is_valid:
-            return jsonify({'success': False, 'error': message}), 400
-        
-        # Split data for comparison (use same approach as individual forecast)
-        test_size = min(horizon, len(prices) // 5)
-        train_size = len(prices) - test_size
-        
-        if train_size < MIN_DATA_POINTS:
-            return jsonify({
-                'success': False, 
-                'error': f'Insufficient data for comparison (need {MIN_DATA_POINTS + test_size} points minimum)'
+                'success': False,
+                'error': 'Missing required fields'
             }), 400
         
-        train = prices[:train_size]
-        test = prices[train_size:]
-        
-        logger.info(f"Training set: {len(train)} points")
-        logger.info(f"Test set: {len(test)} points\n")
-        
-        results = {}
-        
-        # Test each model
-        models = [
-            ('ARIMA', arima_model),
-            ('LSTM', lstm_model),
-            ('Ensemble', ensemble_model)
-        ]
-        
-        for name, model in models:
-            logger.info(f"  Testing {name}...")
-            try:
-                pred = model.predict(train, len(test))
-                
-                # Ensure same length
-                pred = pred[:len(test)]
-                
-                metrics = calculate_metrics(test, pred)
-                
-                if metrics:
-                    results[name] = metrics
-                    logger.info(f"  ✓ {name} RMSE: ${metrics['rmse']:.2f}")
-                else:
-                    results[name] = {'rmse': 999, 'mae': 999, 'mape': 999}
-                    logger.warning(f" {name} metrics calculation failed")
-                    
-            except Exception as e:
-                logger.error(f" {name} failed: {e}")
-                results[name] = {'rmse': 999, 'mae': 999, 'mape': 999}
-        
-        logger.info(f"\n✓ Comparison complete!")
-        logger.info(f"{'='*50}\n")
+        # Store each prediction
+        stored_count = 0
+        for forecast_point in forecasts:
+            continuous_monitor.store_prediction(
+                symbol=symbol,
+                model_name=model_name,
+                prediction_time=prediction_time,
+                target_time=forecast_point['x'],
+                predicted_value=forecast_point['y']
+            )
+            stored_count += 1
         
         return jsonify({
             'success': True,
-            'results': results
+            'stored_count': stored_count,
+            'message': f'Stored {stored_count} predictions for continuous evaluation'
         })
     
     except Exception as e:
-        logger.error(f"\nComparison error: {str(e)}")
-        logger.error(traceback.format_exc())
+        logger.error(f"Store prediction error: {e}")
         return jsonify({
-            'success': False, 
-            'error': f'An unexpected error occurred: {str(e)}'
+            'success': False,
+            'error': str(e)
         }), 500
 
+
+# ROUTE 2: Evaluate predictions against actual data
+@app.route('/api/evaluate-predictions/<symbol>', methods=['POST'])
+def evaluate_predictions(symbol):
+    """
+    Evaluate stored predictions against newly available actual data
+    """
+    try:
+        # Fetch latest actual data
+        df = data_fetcher.fetch_historical_data(symbol, period='1mo', interval='1h')
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False,
+                'error': 'No actual data available for evaluation'
+            }), 404
+        
+        # Evaluate predictions
+        results = continuous_monitor.evaluate_predictions(symbol, df)
+        
+        return jsonify({
+            'success': True,
+            'evaluated_count': results['evaluated_count'],
+            'message': f"Evaluated {results['evaluated_count']} predictions"
+        })
+    
+    except Exception as e:
+        logger.error(f"Evaluate predictions error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 3: Get continuous metrics
+@app.route('/api/continuous-metrics/<symbol>', methods=['GET'])
+def get_continuous_metrics(symbol):
+    """
+    Get continuous evaluation metrics for a symbol
+    """
+    try:
+        days = int(request.args.get('days', 30))
+        model = request.args.get('model', None)
+        
+        metrics = continuous_monitor.get_continuous_metrics(
+            symbol=symbol,
+            model=model,
+            days=days
+        )
+        
+        if not metrics:
+            return jsonify({
+                'success': True,
+                'metrics': [],
+                'message': 'No metrics available yet'
+            })
+        
+        # Calculate summary statistics
+        mae_values = [m['mae'] for m in metrics]
+        rmse_values = [m['rmse'] for m in metrics]
+        mape_values = [m['mape'] for m in metrics]
+        
+        summary = {
+            'avg_mae': float(np.mean(mae_values)),
+            'avg_rmse': float(np.mean(rmse_values)),
+            'avg_mape': float(np.mean(mape_values)),
+            'count': len(metrics)
+        }
+        
+        return jsonify({
+            'success': True,
+            'metrics': metrics,
+            'summary': summary
+        })
+    
+    except Exception as e:
+        logger.error(f"Get continuous metrics error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 4: Get model comparison based on continuous evaluation
+@app.route('/api/continuous-comparison/<symbol>', methods=['GET'])
+def get_continuous_comparison(symbol):
+    """
+    Compare models based on continuous evaluation data
+    """
+    try:
+        days = int(request.args.get('days', 30))
+        
+        comparison = continuous_monitor.get_model_comparison(symbol, days)
+        
+        if not comparison:
+            return jsonify({
+                'success': True,
+                'comparison': {},
+                'message': 'No comparison data available yet'
+            })
+        
+        return jsonify({
+            'success': True,
+            'comparison': comparison
+        })
+    
+    except Exception as e:
+        logger.error(f"Continuous comparison error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 5: Get error overlay data
+@app.route('/api/error-overlay/<symbol>', methods=['POST'])
+def get_error_overlay(symbol):
+    """
+    Get error overlay data for candlestick chart
+    """
+    try:
+        data = request.json
+        
+        # Get predictions and actuals from request
+        predictions = data.get('predictions', [])
+        timestamps = data.get('timestamps', [])
+        
+        if not predictions or not timestamps:
+            return jsonify({
+                'success': False,
+                'error': 'Predictions and timestamps required'
+            }), 400
+        
+        # Fetch actual data for those timestamps
+        df = data_fetcher.fetch_historical_data(symbol, period='1mo', interval='1h')
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False,
+                'error': 'No actual data available'
+            }), 404
+        
+        # Extract actual values for given timestamps
+        actuals = []
+        for ts in timestamps:
+            ts_obj = pd.Timestamp(ts)
+            if ts_obj in df.index:
+                actuals.append(df.loc[ts_obj, 'Close'])
+            else:
+                # Find nearest timestamp
+                nearest_idx = df.index.get_indexer([ts_obj], method='nearest')[0]
+                if nearest_idx >= 0:
+                    actuals.append(df.iloc[nearest_idx]['Close'])
+        
+        if len(actuals) != len(predictions):
+            return jsonify({
+                'success': False,
+                'error': 'Could not match all predictions with actual values'
+            }), 400
+        
+        # Calculate error overlay
+        overlay_data = continuous_monitor.calculate_error_overlay(
+            predictions, actuals, timestamps
+        )
+        
+        return jsonify({
+            'success': True,
+            'overlay_data': overlay_data
+        })
+    
+    except Exception as e:
+        logger.error(f"Error overlay error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 6: Get prediction accuracy over time
+@app.route('/api/prediction-accuracy/<symbol>', methods=['GET'])
+def get_prediction_accuracy(symbol):
+    """
+    Get prediction accuracy trend over time
+    """
+    try:
+        model = request.args.get('model', None)
+        
+        accuracy_data = continuous_monitor.get_prediction_accuracy_over_time(
+            symbol, model
+        )
+        
+        if not accuracy_data:
+            return jsonify({
+                'success': True,
+                'data': None,
+                'message': 'No accuracy data available yet'
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': accuracy_data
+        })
+    
+    except Exception as e:
+        logger.error(f"Prediction accuracy error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 7: Detect performance degradation
+@app.route('/api/detect-degradation/<symbol>', methods=['POST'])
+def detect_degradation(symbol):
+    """
+    Detect if model performance has degraded
+    """
+    try:
+        data = request.json
+        model = data.get('model', 'Ensemble')
+        threshold = float(data.get('threshold', 0.20))
+        
+        degradation = continuous_monitor.detect_performance_degradation(
+            symbol, model, threshold
+        )
+        
+        return jsonify({
+            'success': True,
+            'degradation': degradation
+        })
+    
+    except Exception as e:
+        logger.error(f"Detect degradation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 8: Get recent prediction errors
+@app.route('/api/recent-errors', methods=['GET'])
+def get_recent_errors():
+    """
+    Get recent prediction errors across all symbols
+    """
+    try:
+        limit = int(request.args.get('limit', 50))
+        
+        errors = continuous_monitor.get_recent_errors(limit)
+        
+        return jsonify({
+            'success': True,
+            'errors': errors,
+            'count': len(errors)
+        })
+    
+    except Exception as e:
+        logger.error(f"Recent errors error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ROUTE 9: Cleanup old monitoring data
+@app.route('/api/cleanup-monitoring', methods=['POST'])
+def cleanup_monitoring():
+    """
+    Clean up old monitoring data
+    """
+    try:
+        days = int(request.json.get('days', 90))
+        
+        result = continuous_monitor.cleanup_old_data(days)
+        
+        return jsonify({
+            'success': True,
+            'cleaned': result,
+            'message': f"Cleaned data older than {days} days"
+        })
+    
+    except Exception as e:
+        logger.error(f"Cleanup error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# MODIFIED ROUTE: Enhanced forecast with adaptive learning
+# Replace the existing /api/forecast route with this enhanced version
 @app.route('/api/forecast-enhanced', methods=['POST'])
 def generate_forecast_enhanced():
     """
@@ -974,12 +1400,120 @@ def generate_forecast_enhanced():
             'best_version': best_version if use_adaptive else None
         })
     
+    
     except Exception as e:
         logger.error(f"\nForecast error: {str(e)}")
         return jsonify({
             'success': False,
             'error': f'An unexpected error occurred: {str(e)}'
         }), 500
+
+@app.route('/api/compare-models', methods=['POST'])
+def compare_models():
+    """Compare performance of different models"""
+    try:
+        data = request.json
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        symbol = data.get('symbol')
+        horizon = data.get('horizon')
+        
+        if not symbol:
+            return jsonify({'success': False, 'error': 'Symbol is required'}), 400
+        
+        try:
+            horizon = int(horizon)
+            if horizon <= 0 or horizon > 168:
+                return jsonify({'success': False, 'error': 'Horizon must be between 1 and 168 hours'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'error': 'Invalid horizon value'}), 400
+        
+        logger.info(f"\n{'='*50}")
+        logger.info(f"Comparing all models for {symbol}")
+        logger.info(f"Horizon: {horizon}h")
+        logger.info(f"{'='*50}\n")
+        
+        # Get historical data
+        interval = '1h' if horizon <= 24 else '1d'
+        df = data_fetcher.fetch_historical_data(symbol, period='1y', interval=interval)
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False, 
+                'error': f'No historical data available for {symbol}'
+            }), 404
+        
+        prices = df['Close'].values
+        
+        # Validate data
+        is_valid, message = validate_data(prices)
+        if not is_valid:
+            return jsonify({'success': False, 'error': message}), 400
+        
+        # Split data for comparison (use same approach as individual forecast)
+        test_size = min(horizon, len(prices) // 5)
+        train_size = len(prices) - test_size
+        
+        if train_size < MIN_DATA_POINTS:
+            return jsonify({
+                'success': False, 
+                'error': f'Insufficient data for comparison (need {MIN_DATA_POINTS + test_size} points minimum)'
+            }), 400
+        
+        train = prices[:train_size]
+        test = prices[train_size:]
+        
+        logger.info(f"Training set: {len(train)} points")
+        logger.info(f"Test set: {len(test)} points\n")
+        
+        results = {}
+        
+        # Test each model
+        models = [
+            ('ARIMA', arima_model),
+            ('LSTM', lstm_model),
+            ('Ensemble', ensemble_model)
+        ]
+        
+        for name, model in models:
+            logger.info(f"  Testing {name}...")
+            try:
+                pred = model.predict(train, len(test))
+                
+                # Ensure same length
+                pred = pred[:len(test)]
+                
+                metrics = calculate_metrics(test, pred)
+                
+                if metrics:
+                    results[name] = metrics
+                    logger.info(f"  âœ“ {name} RMSE: ${metrics['rmse']:.2f}")
+                else:
+                    results[name] = {'rmse': 999, 'mae': 999, 'mape': 999}
+                    logger.warning(f" {name} metrics calculation failed")
+                    
+            except Exception as e:
+                logger.error(f" {name} failed: {e}")
+                results[name] = {'rmse': 999, 'mae': 999, 'mape': 999}
+        
+        logger.info(f"\nâœ“ Comparison complete!")
+        logger.info(f"{'='*50}\n")
+        
+        return jsonify({
+            'success': True,
+            'results': results
+        })
+    
+    except Exception as e:
+        logger.error(f"\nComparison error: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False, 
+            'error': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
 
 @app.errorhandler(404)
 def not_found(error):

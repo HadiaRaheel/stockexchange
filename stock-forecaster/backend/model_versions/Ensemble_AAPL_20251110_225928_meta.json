@@ -1,0 +1,12 @@
+{
+  "model_name": "Ensemble",
+  "symbol": "AAPL",
+  "timestamp": "2025-11-10T22:59:28.714791",
+  "metrics": {
+    "rmse": 1.3696269094969011,
+    "mae": 1.3696269094969011,
+    "mape": 0.5079088077196192
+  },
+  "version": "Ensemble_AAPL_20251110_225928",
+  "training_date": "2025-11-10 22:59:28"
+}

@@ -21,6 +21,7 @@ from models.adaptive_learner import AdaptiveLearner
 from models.online_learner import OnlineLSTM, AdaptiveEnsemble
 
 from models.continuous_monitor import ContinuousMonitor
+from models.portfolio_manager import PortfolioManager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +44,7 @@ adaptive_learner = AdaptiveLearner()
 online_lstm = OnlineLSTM()
 
 continuous_monitor = ContinuousMonitor()
+portfolio_manager = PortfolioManager()
 
 # Minimum data points required
 MIN_DATA_POINTS = 50
@@ -1013,6 +1015,201 @@ def cleanup_monitoring():
             'error': str(e)
         }), 500
 
+
+@app.route('/api/forecast', methods=['POST'])
+def generate_forecast():
+    """Generate forecast for given symbol and horizon"""
+    try:
+        data = request.json
+        
+        # Validate input
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        symbol = data.get('symbol')
+        horizon = data.get('horizon')
+        model_type = data.get('model', 'ensemble')
+        
+        if not symbol:
+            return jsonify({'success': False, 'error': 'Symbol is required'}), 400
+        
+        try:
+            horizon = int(horizon)
+            if horizon <= 0 or horizon > 168:  # Max 1 week
+                return jsonify({'success': False, 'error': 'Horizon must be between 1 and 168 hours'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'error': 'Invalid horizon value'}), 400
+        
+        logger.info(f"\n{'='*50}")
+        logger.info(f"Generating {model_type.upper()} forecast")
+        logger.info(f"Symbol: {symbol} | Horizon: {horizon}h")
+        logger.info(f"{'='*50}")
+        
+        # Get historical data
+        interval = '1h' if horizon <= 24 else '1d'
+        df = data_fetcher.fetch_historical_data(symbol, period='1y', interval=interval)
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False, 
+                'error': f'No historical data available for {symbol}'
+            }), 404
+        
+        # Prepare data
+        prices = df['Close'].values
+        
+        # Validate data
+        is_valid, message = validate_data(prices)
+        if not is_valid:
+            return jsonify({'success': False, 'error': message}), 400
+        
+        logger.info(f"Using {len(prices)} historical prices")
+        logger.info(f"Price range: ${prices.min():.2f} - ${prices.max():.2f}")
+        logger.info(f"Last price: ${prices[-1]:.2f}")
+        
+        # Generate forecasts based on model type
+        logger.info(f"\n  Training {model_type.upper()} model...")
+        
+        try:
+            if model_type == 'arima':
+                forecast = arima_model.predict(prices, horizon)
+                model_name = 'ARIMA'
+            elif model_type == 'lstm':
+                forecast = lstm_model.predict(prices, horizon)
+                model_name = 'LSTM'
+            else:  # ensemble
+                forecast = ensemble_model.predict(prices, horizon)
+                model_name = 'Ensemble'
+        except Exception as model_error:
+            logger.error(f"Model {model_type} failed: {model_error}")
+            logger.error(traceback.format_exc())
+            return jsonify({
+                'success': False, 
+                'error': f'Model training failed: {str(model_error)}'
+            }), 500
+        
+        # Validate forecast
+        if forecast is None or len(forecast) == 0:
+            return jsonify({
+                'success': False, 
+                'error': 'Model failed to generate valid predictions'
+            }), 500
+        
+        # Ensure forecast has correct length
+        if len(forecast) != horizon:
+            logger.warning(f"Forecast length mismatch: expected {horizon}, got {len(forecast)}")
+            if len(forecast) < horizon:
+                forecast = np.concatenate([forecast, np.full(horizon - len(forecast), forecast[-1])])
+            else:
+                forecast = forecast[:horizon]
+        
+        logger.info(f"Forecast generated: {len(forecast)} points")
+        logger.info(f"Predicted range: ${forecast.min():.2f} - ${forecast.max():.2f}")
+        
+        # Calculate metrics using walk-forward validation
+        if len(prices) > horizon:
+            validation_size = min(horizon, len(prices) // 5)
+            train_prices = prices[:-validation_size]
+            validation_prices = prices[-validation_size:]
+            
+            try:
+                if model_type == 'arima':
+                    validation_pred = arima_model.predict(train_prices, validation_size)
+                elif model_type == 'lstm':
+                    validation_pred = lstm_model.predict(train_prices, validation_size)
+                else:
+                    validation_pred = ensemble_model.predict(train_prices, validation_size)
+                
+                metrics = calculate_metrics(validation_prices, validation_pred)
+            except Exception as e:
+                logger.warning(f"Could not calculate validation metrics: {e}")
+                metrics = None
+        else:
+            metrics = None
+        
+        if metrics:
+            logger.info(f"\n Validation Metrics:")
+            logger.info(f"  RMSE: ${metrics['rmse']:.2f}")
+            logger.info(f"  MAE: ${metrics['mae']:.2f}")
+            if metrics['mape']:
+                logger.info(f"  MAPE: {metrics['mape']:.2f}%")
+        else:
+            logger.info("\n Metrics: Not available (insufficient validation data)")
+            metrics = {'rmse': None, 'mae': None, 'mape': None}
+        
+        logger.info(f"{'='*50}\n")
+        
+        # Create forecast timestamps
+        last_timestamp = df.index[-1]
+        forecast_timestamps = []
+        for i in range(1, horizon + 1):
+            if horizon <= 24:
+                timestamp = last_timestamp + timedelta(hours=i)
+            else:
+                timestamp = last_timestamp + timedelta(days=i)
+            forecast_timestamps.append(timestamp.isoformat())
+        
+        # ========================
+        # AUTO-EVALUATE AND STORE FORECAST
+        # ========================
+        try:
+            forecast_dict = [{
+                'x': forecast_timestamps[i],
+                'y': float(forecast[i])
+            } for i in range(len(forecast))]
+            
+            continuous_monitor.store_prediction(
+                symbol=symbol,
+                model_name=model_name,
+                prediction_time=datetime.now().isoformat(),
+                target_time=forecast_timestamps[0],
+                predicted_value=float(forecast[0])
+            )
+            
+            # Auto-evaluate against recent data
+            df_for_eval = data_fetcher.fetch_historical_data(symbol, period='1mo', interval=interval)
+            if df_for_eval is not None and not df_for_eval.empty:
+                eval_results = continuous_monitor.evaluate_predictions(symbol, df_for_eval)
+                logger.info(f"Auto-evaluated {eval_results['evaluated_count']} predictions")
+        except Exception as e:
+            logger.warning(f"Could not store/evaluate predictions: {e}")
+        # ========================
+        
+        # Store forecast in database
+        forecast_data = {
+            'symbol': symbol,
+            'model': model_name,
+            'horizon': horizon,
+            'timestamp': datetime.now().isoformat(),
+            'predictions': [float(x) for x in forecast],
+            'metrics': metrics
+        }
+        try:
+            db.store_forecast(forecast_data)
+        except Exception as db_error:
+            logger.warning(f"Could not store forecast in database: {db_error}")
+        
+        # Format response
+        forecast_points = [{
+            'x': forecast_timestamps[i],
+            'y': float(forecast[i])
+        } for i in range(len(forecast))]
+        
+        return jsonify({
+            'success': True,
+            'forecast': forecast_points,
+            'metrics': metrics,
+            'model': model_name
+        })
+    
+    except Exception as e:
+        logger.error(f"\nForecast error: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False, 
+            'error': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
 # MODIFIED ROUTE: Enhanced forecast with adaptive learning
 # Replace the existing /api/forecast route with this enhanced version
 @app.route('/api/forecast-enhanced', methods=['POST'])
@@ -1176,6 +1373,383 @@ def generate_forecast_enhanced():
         return jsonify({
             'success': False,
             'error': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
+
+@app.route('/api/portfolio/create', methods=['POST'])
+def create_portfolio():
+    """Create a new portfolio"""
+    try:
+        data = request.json
+        portfolio_id = data.get('portfolio_id', 'default')
+        initial_cash = float(data.get('initial_cash', 100000.0))
+        
+        portfolio = portfolio_manager.create_portfolio(portfolio_id, initial_cash)
+        
+        return jsonify({
+            'success': True,
+            'portfolio_id': portfolio.portfolio_id,
+            'initial_cash': portfolio.initial_cash,
+            'message': f'Portfolio created with ${initial_cash:.2f}'
+        })
+    
+    except Exception as e:
+        logger.error(f"Create portfolio error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/<portfolio_id>', methods=['GET'])
+def get_portfolio(portfolio_id):
+    """Get portfolio details"""
+    try:
+        portfolio = portfolio_manager.get_portfolio(portfolio_id)
+        
+        if not portfolio:
+            return jsonify({
+                'success': False,
+                'error': 'Portfolio not found'
+            }), 404
+        
+        # Get current prices for all positions
+        current_prices = {}
+        for symbol in portfolio.positions.keys():
+            try:
+                df = data_fetcher.fetch_historical_data(symbol, period='1d', interval='1d')
+                if df is not None and not df.empty:
+                    current_prices[symbol] = float(df['Close'].iloc[-1])
+            except:
+                current_prices[symbol] = portfolio.positions[symbol]['avg_cost']
+        
+        # Get metrics and positions
+        metrics = portfolio.get_performance_metrics(current_prices)
+        positions = portfolio.get_positions_summary(current_prices)
+        
+        return jsonify({
+            'success': True,
+            'portfolio_id': portfolio_id,
+            'metrics': metrics,
+            'positions': positions,
+            'transaction_history': portfolio.transaction_history[-50:]  # Last 50 transactions
+        })
+    
+    except Exception as e:
+        logger.error(f"Get portfolio error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/<portfolio_id>/trade', methods=['POST'])
+def execute_trade(portfolio_id):
+    """Execute a trade"""
+    try:
+        data = request.json
+        
+        action = data.get('action')  # 'BUY' or 'SELL'
+        symbol = data.get('symbol')
+        quantity = int(data.get('quantity'))
+        price = float(data.get('price'))
+        
+        if not all([action, symbol, quantity, price]):
+            return jsonify({
+                'success': False,
+                'error': 'Missing required fields'
+            }), 400
+        
+        result = portfolio_manager.execute_trade(
+            portfolio_id, action, symbol, quantity, price
+        )
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'transaction': result,
+                'message': f'{action} {quantity} {symbol} @ ${price:.2f}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Trade execution failed'
+            }), 400
+    
+    except Exception as e:
+        logger.error(f"Execute trade error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/<portfolio_id>/strategy', methods=['POST'])
+def execute_strategy(portfolio_id):
+    """Execute trading strategy"""
+    try:
+        data = request.json
+        
+        symbol = data.get('symbol')
+        strategy_name = data.get('strategy', 'forecast')
+        
+        if not symbol:
+            return jsonify({
+                'success': False,
+                'error': 'Symbol is required'
+            }), 400
+        
+        # Get historical data
+        df = data_fetcher.fetch_historical_data(symbol, period='3mo', interval='1d')
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False,
+                'error': 'No data available'
+            }), 404
+        
+        historical_data = df['Close'].values
+        current_price = float(historical_data[-1])
+        
+        # Get forecast
+        forecast_data = []
+        if strategy_name == 'forecast':
+            try:
+                forecast = ensemble_model.predict(historical_data, 5)
+                forecast_data = forecast
+            except:
+                forecast_data = []
+        
+        # Execute strategy
+        result = portfolio_manager.execute_strategy(
+            portfolio_id, symbol, historical_data, 
+            forecast_data, current_price, strategy_name
+        )
+        
+        return jsonify({
+            'success': True,
+            **result
+        })
+    
+    except Exception as e:
+        logger.error(f"Execute strategy error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/<portfolio_id>/performance', methods=['GET'])
+def get_portfolio_performance(portfolio_id):
+    """Get portfolio performance over time"""
+    try:
+        portfolio = portfolio_manager.get_portfolio(portfolio_id)
+        
+        if not portfolio:
+            return jsonify({
+                'success': False,
+                'error': 'Portfolio not found'
+            }), 404
+        
+        # Get current prices
+        current_prices = {}
+        for symbol in portfolio.positions.keys():
+            try:
+                df = data_fetcher.fetch_historical_data(symbol, period='1d', interval='1d')
+                if df is not None and not df.empty:
+                    current_prices[symbol] = float(df['Close'].iloc[-1])
+            except:
+                current_prices[symbol] = portfolio.positions[symbol]['avg_cost']
+        
+        # Get metrics
+        metrics = portfolio.get_performance_metrics(current_prices)
+        
+        # Prepare history for chart
+        history = portfolio.portfolio_history
+        
+        return jsonify({
+            'success': True,
+            'metrics': metrics,
+            'history': history
+        })
+    
+    except Exception as e:
+        logger.error(f"Get performance error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/<portfolio_id>/snapshot', methods=['POST'])
+def record_portfolio_snapshot(portfolio_id):
+    """Record a snapshot of portfolio value"""
+    try:
+        portfolio = portfolio_manager.get_portfolio(portfolio_id)
+        
+        if not portfolio:
+            return jsonify({
+                'success': False,
+                'error': 'Portfolio not found'
+            }), 404
+        
+        # Get current prices
+        current_prices = {}
+        for symbol in portfolio.positions.keys():
+            try:
+                df = data_fetcher.fetch_historical_data(symbol, period='1d', interval='1d')
+                if df is not None and not df.empty:
+                    current_prices[symbol] = float(df['Close'].iloc[-1])
+            except:
+                current_prices[symbol] = portfolio.positions[symbol]['avg_cost']
+        
+        snapshot = portfolio.record_snapshot(current_prices)
+        portfolio_manager.save_portfolio(portfolio_id)
+        
+        return jsonify({
+            'success': True,
+            'snapshot': snapshot
+        })
+    
+    except Exception as e:
+        logger.error(f"Record snapshot error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/list', methods=['GET'])
+def list_portfolios():
+    """List all portfolios"""
+    try:
+        # Get current prices for major symbols
+        symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'BTC-USD']
+        current_prices = {}
+        
+        for symbol in symbols:
+            try:
+                df = data_fetcher.fetch_historical_data(symbol, period='1d', interval='1d')
+                if df is not None and not df.empty:
+                    current_prices[symbol] = float(df['Close'].iloc[-1])
+            except:
+                pass
+        
+        summaries = portfolio_manager.get_all_portfolios_summary(current_prices)
+        
+        return jsonify({
+            'success': True,
+            'portfolios': summaries,
+            'count': len(summaries)
+        })
+    
+    except Exception as e:
+        logger.error(f"List portfolios error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/portfolio/<portfolio_id>/backtest', methods=['POST'])
+def backtest_strategy(portfolio_id):
+    """Backtest a trading strategy"""
+    try:
+        data = request.json
+        
+        symbol = data.get('symbol')
+        strategy_name = data.get('strategy', 'forecast')
+        start_date = data.get('start_date')
+        
+        if not symbol:
+            return jsonify({
+                'success': False,
+                'error': 'Symbol is required'
+            }), 400
+        
+        # Get historical data
+        df = data_fetcher.fetch_historical_data(symbol, period='1y', interval='1d')
+        
+        if df is None or df.empty:
+            return jsonify({
+                'success': False,
+                'error': 'No data available'
+            }), 404
+        
+        # Create temporary portfolio for backtest
+        backtest_portfolio = Portfolio(initial_cash=100000.0, portfolio_id='backtest_temp')
+        
+        # Get strategy
+        if strategy_name == 'forecast':
+            strategy = portfolio_manager.strategies['forecast']
+        else:
+            strategy = portfolio_manager.strategies.get(strategy_name, 
+                                                       portfolio_manager.strategies['momentum'])
+        
+        # Backtest
+        prices = df['Close'].values
+        dates = df.index
+        
+        backtest_results = []
+        
+        for i in range(60, len(prices)):  # Start after 60 days for sufficient history
+            historical = prices[:i]
+            current_price = prices[i]
+            
+            # Generate forecast (simple for backtest)
+            if strategy_name == 'forecast':
+                try:
+                    forecast = [current_price * 1.02]  # Simple 2% forecast
+                except:
+                    forecast = []
+            else:
+                forecast = []
+            
+            # Generate signal
+            signal = strategy.generate_signal(historical, forecast, current_price)
+            
+            # Execute signal
+            if signal == 'BUY':
+                max_investment = backtest_portfolio.cash * 0.1
+                quantity = int(max_investment / current_price)
+                if quantity > 0:
+                    backtest_portfolio.buy(symbol, quantity, current_price, dates[i].isoformat())
+            
+            elif signal == 'SELL':
+                position = backtest_portfolio.get_position(symbol)
+                if position['quantity'] > 0:
+                    backtest_portfolio.sell(symbol, position['quantity'], 
+                                          current_price, dates[i].isoformat())
+            
+            # Record value
+            portfolio_value = backtest_portfolio.get_portfolio_value({symbol: current_price})
+            
+            backtest_results.append({
+                'date': dates[i].isoformat(),
+                'portfolio_value': portfolio_value,
+                'signal': signal,
+                'price': current_price
+            })
+        
+        # Calculate final metrics
+        final_prices = {symbol: prices[-1]}
+        metrics = backtest_portfolio.get_performance_metrics(final_prices)
+        
+        return jsonify({
+            'success': True,
+            'strategy': strategy_name,
+            'symbol': symbol,
+            'metrics': metrics,
+            'results': backtest_results[-100:],  # Last 100 days
+            'total_trades': backtest_portfolio.total_trades
+        })
+    
+    except Exception as e:
+        logger.error(f"Backtest error: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
 
 @app.route('/api/compare-models', methods=['POST'])

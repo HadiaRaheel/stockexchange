@@ -1,0 +1,11 @@
+{
+  "portfolio_id": "default",
+  "initial_cash": 100000.0,
+  "cash": 100000.0,
+  "positions": {},
+  "transaction_history": [],
+  "portfolio_history": [],
+  "total_trades": 0,
+  "winning_trades": 0,
+  "losing_trades": 0
+}

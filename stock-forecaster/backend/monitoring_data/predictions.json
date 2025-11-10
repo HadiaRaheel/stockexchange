@@ -56,8 +56,11 @@
       "prediction_time": "2025-11-10T16:31:31.673Z",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 271.0774861345485,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.3074971208766328,
+      "pct_error": 0.48467108059613306,
+      "evaluation_time": "2025-11-10T23:04:03.591149"
     },
     {
       "symbol": "AAPL",
@@ -65,8 +68,11 @@
       "prediction_time": "2025-11-10T21:36:20.311046",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 270.9005951202282,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.1306061065563426,
+      "pct_error": 0.41910003061869266,
+      "evaluation_time": "2025-11-10T23:04:03.592113"
     },
     {
       "symbol": "AAPL",
@@ -74,8 +80,11 @@
       "prediction_time": "2025-11-10T16:36:20.743Z",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 270.9005951202282,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.1306061065563426,
+      "pct_error": 0.41910003061869266,
+      "evaluation_time": "2025-11-10T23:04:03.592113"
     },
     {
       "symbol": "AAPL",
@@ -83,8 +92,11 @@
       "prediction_time": "2025-11-10T21:37:10.643162",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 271.19042153485395,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.4204325211820787,
+      "pct_error": 0.5265346699147071,
+      "evaluation_time": "2025-11-10T23:04:03.593109"
     },
     {
       "symbol": "AAPL",
@@ -92,8 +104,11 @@
       "prediction_time": "2025-11-10T16:37:11.063Z",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 271.19042153485395,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.4204325211820787,
+      "pct_error": 0.5265346699147071,
+      "evaluation_time": "2025-11-10T23:04:03.593109"
     },
     {
       "symbol": "AAPL",
@@ -101,8 +116,11 @@
       "prediction_time": "2025-11-10T21:37:31.917155",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 272.8938824795368,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 3.12389346586491,
+      "pct_error": 1.1579840579326235,
+      "evaluation_time": "2025-11-10T23:04:03.593109"
     },
     {
       "symbol": "AAPL",
@@ -110,8 +128,11 @@
       "prediction_time": "2025-11-10T16:37:32.340Z",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 272.8938824795368,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 3.12389346586491,
+      "pct_error": 1.1579840579326235,
+      "evaluation_time": "2025-11-10T23:04:03.594109"
     },
     {
       "symbol": "AAPL",
@@ -119,8 +140,11 @@
       "prediction_time": "2025-11-10T21:38:24.065795",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 270.9221069780565,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.1521179643846153,
+      "pct_error": 0.4270741784870022,
+      "evaluation_time": "2025-11-10T23:04:03.594109"
     },
     {
       "symbol": "AAPL",
@@ -128,8 +152,11 @@
       "prediction_time": "2025-11-10T16:38:24.569Z",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 270.9221069780565,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.1521179643846153,
+      "pct_error": 0.4270741784870022,
+      "evaluation_time": "2025-11-10T23:04:03.595106"
     },
     {
       "symbol": "AAPL",
@@ -137,8 +164,11 @@
       "prediction_time": "2025-11-10T21:39:38.937032",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 270.9113403296558,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.1413513159839113,
+      "pct_error": 0.42308313098758654,
+      "evaluation_time": "2025-11-10T23:04:03.595106"
     },
     {
       "symbol": "AAPL",
@@ -146,8 +176,11 @@
       "prediction_time": "2025-11-10T16:39:39.332Z",
       "target_time": "2025-11-10T12:30:00-05:00",
       "predicted_value": 270.9113403296558,
-      "actual_value": null,
-      "evaluated": false
+      "actual_value": 269.7699890136719,
+      "evaluated": true,
+      "error": 1.1413513159839113,
+      "pct_error": 0.42308313098758654,
+      "evaluation_time": "2025-11-10T23:04:03.595106"
     }
   ],
   "MSFT_2025-11-10T12:30:00-05:00": [
@@ -217,6 +250,51 @@
       "prediction_time": "2025-11-10T16:39:39.332Z",
       "target_time": "2025-11-10T13:30:00-05:00",
       "predicted_value": 270.9586598532039,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T17:59:28.765Z",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 271.2576712338967,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T23:18:27.429245",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 271.5130756198718,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T23:21:07.483585",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 271.4082248154115,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "Ensemble",
+      "prediction_time": "2025-11-10T23:21:42.101117",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 271.4028415056577,
+      "actual_value": null,
+      "evaluated": false
+    },
+    {
+      "symbol": "AAPL",
+      "model": "ensemble",
+      "prediction_time": "2025-11-10T18:21:42.516Z",
+      "target_time": "2025-11-10T13:30:00-05:00",
+      "predicted_value": 271.4028415056577,
       "actual_value": null,
       "evaluated": false
     }

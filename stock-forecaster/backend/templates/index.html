@@ -614,6 +614,255 @@
         margin-top: 5px;
     }
 
+    /* Portfolio Management Styles */
+    .portfolio-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin: 25px 0;
+        border: 2px solid #4caf50;
+    }
+    
+    .portfolio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #4caf50;
+        padding-bottom: 15px;
+    }
+    
+    .portfolio-header h3 {
+        margin: 0;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .portfolio-controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .portfolio-btn {
+        padding: 10px 15px;
+        font-size: 0.9em;
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    
+    .portfolio-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+    }
+    
+    .portfolio-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .portfolio-metric-card {
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+    }
+    
+    .portfolio-metric-card.cash {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    }
+    
+    .portfolio-metric-card.negative {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    }
+    
+    .portfolio-metric-label {
+        font-size: 0.85em;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+    
+    .portfolio-metric-value {
+        font-size: 1.8em;
+        font-weight: bold;
+    }
+    
+    .positions-table {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        overflow-x: auto;
+    }
+    
+    .positions-table h4 {
+        margin: 0 0 15px 0;
+        color: #333;
+    }
+    
+    .positions-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .positions-table th {
+        background: #4caf50;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .positions-table td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .positions-table tr:hover {
+        background: #f5f5f5;
+    }
+    
+    .profit {
+        color: #4caf50;
+        font-weight: 600;
+    }
+    
+    .loss {
+        color: #f44336;
+        font-weight: 600;
+    }
+    
+    .transactions-list {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .transaction-item {
+        padding: 12px;
+        margin: 8px 0;
+        border-left: 4px solid #4caf50;
+        background: #f5f5f5;
+        border-radius: 4px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .transaction-item.sell {
+        border-left-color: #2196f3;
+    }
+    
+    .trade-form {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .trade-form h4 {
+        margin: 0 0 15px 0;
+        color: #333;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group select {
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 1em;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #4caf50;
+    }
+    
+    .portfolio-chart {
+        width: 100%;
+        height: 400px;
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+    }
+    
+    .strategy-panel {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .strategy-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .strategy-card {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .strategy-card:hover {
+        border-color: #4caf50;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    }
+    
+    .strategy-card.active {
+        border-color: #4caf50;
+        background: #e8f5e9;
+    }
+    
+    .strategy-card h5 {
+        margin: 0 0 10px 0;
+        color: #333;
+    }
+    
+    .strategy-card p {
+        margin: 0;
+        font-size: 0.9em;
+        color: #666;
+    }
+
     </style>
 </head>
 <body>
@@ -854,6 +1103,142 @@
             </div>
             
             <div id="comparisonStats"></div>
+        </div>
+    </div>
+</div>
+
+    <!-- Add this HTML section after the monitoring dashboard in index.html -->
+<div class="portfolio-section">
+    <div class="portfolio-header">
+        <h3>
+            💰 Portfolio Management
+        </h3>
+        <div>
+            <button class="portfolio-btn" onclick="createDefaultPortfolio()">
+                Create Portfolio
+            </button>
+            <button class="portfolio-btn" onclick="refreshPortfolio()" id="refreshPortfolioBtn">
+                Refresh
+            </button>
+        </div>
+    </div>
+    
+    <div id="portfolioContent">
+        <div style="text-align: center; padding: 40px; color: #666;">
+            <p>No portfolio loaded. Click "Create Portfolio" to get started.</p>
+        </div>
+    </div>
+    
+    <!-- Portfolio Metrics -->
+    <div id="portfolioMetricsSection" style="display: none;">
+        <h4 style="margin: 20px 0 15px 0; color: #333;">📊 Portfolio Overview</h4>
+        <div class="portfolio-metrics" id="portfolioMetrics">
+            <!-- Metrics cards will be inserted here -->
+        </div>
+    </div>
+    
+    <!-- Trade Form -->
+    <div id="tradeFormSection" style="display: none;">
+        <div class="trade-form">
+            <h4>📈 Execute Trade</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tradeAction">Action</label>
+                    <select id="tradeAction">
+                        <option value="BUY">Buy</option>
+                        <option value="SELL">Sell</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tradeSymbol">Symbol</label>
+                    <select id="tradeSymbol">
+                        <option value="AAPL">Apple (AAPL)</option>
+                        <option value="GOOGL">Google (GOOGL)</option>
+                        <option value="MSFT">Microsoft (MSFT)</option>
+                        <option value="TSLA">Tesla (TSLA)</option>
+                        <option value="BTC-USD">Bitcoin (BTC-USD)</option>
+                        <option value="ETH-USD">Ethereum (ETH-USD)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tradeQuantity">Quantity</label>
+                    <input type="number" id="tradeQuantity" min="1" value="10">
+                </div>
+                <div class="form-group">
+                    <label for="tradePrice">Price</label>
+                    <input type="number" id="tradePrice" step="0.01" min="0.01" value="100">
+                </div>
+            </div>
+            <button class="portfolio-btn" onclick="executeTrade()">Execute Trade</button>
+            <button class="portfolio-btn" onclick="getLatestPrice()" style="margin-left: 10px;">
+                Get Latest Price
+            </button>
+        </div>
+    </div>
+    
+    <!-- Strategy Panel -->
+    <div id="strategySection" style="display: none;">
+        <div class="strategy-panel">
+            <h4>🎯 Trading Strategies</h4>
+            <p style="color: #666; margin-bottom: 15px;">
+                Select a strategy and let the system execute trades automatically based on predictions.
+            </p>
+            <div class="strategy-options">
+                <div class="strategy-card" onclick="selectStrategy('forecast')">
+                    <h5>📊 Forecast-Based</h5>
+                    <p>Trade based on model predictions. Buys when forecast shows >3% gain, sells on predicted losses.</p>
+                </div>
+                <div class="strategy-card" onclick="selectStrategy('momentum')">
+                    <h5>📈 Momentum</h5>
+                    <p>Trade based on price momentum and moving averages. Follows trending markets.</p>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="portfolio-btn" onclick="executeAutoStrategy()">
+                    Execute Strategy
+                </button>
+                <button class="portfolio-btn" onclick="backtestStrategy()" style="margin-left: 10px;">
+                    Backtest Strategy
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Positions Table -->
+    <div id="positionsSection" style="display: none;">
+        <div class="positions-table">
+            <h4>📋 Current Positions</h4>
+            <table id="positionsTable">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Quantity</th>
+                        <th>Avg Cost</th>
+                        <th>Current Price</th>
+                        <th>Market Value</th>
+                        <th>P/L</th>
+                        <th>P/L %</th>
+                    </tr>
+                </thead>
+                <tbody id="positionsBody">
+                    <!-- Positions will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Portfolio Performance Chart -->
+    <div id="portfolioChartSection" style="display: none;">
+        <div class="portfolio-chart" id="portfolioPerformanceChart"></div>
+    </div>
+    
+    <!-- Transaction History -->
+    <div id="transactionsSection" style="display: none;">
+        <div class="transactions-list">
+            <h4>📜 Recent Transactions</h4>
+            <div id="transactionsList">
+                <!-- Transactions will be inserted here -->
+            </div>
         </div>
     </div>
 </div>
@@ -1942,6 +2327,358 @@
             statusIndicator.classList.add('inactive');
         }
     });
+
+     let currentPortfolioId = 'default';
+    let selectedStrategy = 'forecast';
+    
+    async function createDefaultPortfolio() {
+        setLoading(true, 'Creating portfolio...');
+        
+        try {
+            const response = await fetch(`${API_BASE}/portfolio/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    portfolio_id: 'default',
+                    initial_cash: 100000
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                currentPortfolioId = data.portfolio_id;
+                showAlert('success', data.message);
+                await refreshPortfolio();
+            } else {
+                showAlert('error', data.error);
+            }
+        } catch (error) {
+            showAlert('error', 'Failed to create portfolio: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    async function refreshPortfolio() {
+        if (!currentPortfolioId) {
+            return;
+        }
+        
+        setLoading(true, 'Loading portfolio...');
+        
+        try {
+            const response = await fetch(`${API_BASE}/portfolio/${currentPortfolioId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                displayPortfolio(data);
+                
+                // Show sections
+                document.getElementById('portfolioMetricsSection').style.display = 'block';
+                document.getElementById('tradeFormSection').style.display = 'block';
+                document.getElementById('strategySection').style.display = 'block';
+                document.getElementById('positionsSection').style.display = 'block';
+                document.getElementById('transactionsSection').style.display = 'block';
+                document.getElementById('portfolioChartSection').style.display = 'block';
+                
+                // Load performance
+                await loadPortfolioPerformance();
+                
+                showAlert('success', 'Portfolio refreshed');
+            } else {
+                showAlert('error', data.error);
+            }
+        } catch (error) {
+            showAlert('error', 'Failed to load portfolio: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    function displayPortfolio(data) {
+        const metrics = data.metrics;
+        const positions = data.positions;
+        const transactions = data.transaction_history;
+        
+        // Display metrics
+        const metricsHtml = `
+            <div class="portfolio-metric-card">
+                <div class="portfolio-metric-label">Total Value</div>
+                <div class="portfolio-metric-value">$${metrics.current_value.toFixed(2)}</div>
+            </div>
+            <div class="portfolio-metric-card cash">
+                <div class="portfolio-metric-label">Cash Available</div>
+                <div class="portfolio-metric-value">$${metrics.cash.toFixed(2)}</div>
+            </div>
+            <div class="portfolio-metric-card ${metrics.total_return < 0 ? 'negative' : ''}">
+                <div class="portfolio-metric-label">Total Return</div>
+                <div class="portfolio-metric-value">${metrics.total_return_pct.toFixed(2)}%</div>
+            </div>
+            <div class="portfolio-metric-card">
+                <div class="portfolio-metric-label">Sharpe Ratio</div>
+                <div class="portfolio-metric-value">${metrics.sharpe_ratio.toFixed(3)}</div>
+            </div>
+            <div class="portfolio-metric-card">
+                <div class="portfolio-metric-label">Win Rate</div>
+                <div class="portfolio-metric-value">${metrics.win_rate.toFixed(1)}%</div>
+            </div>
+            <div class="portfolio-metric-card">
+                <div class="portfolio-metric-label">Total Trades</div>
+                <div class="portfolio-metric-value">${metrics.total_trades}</div>
+            </div>
+        `;
+        
+        document.getElementById('portfolioMetrics').innerHTML = metricsHtml;
+        
+        // Display positions
+        if (positions.length > 0) {
+            let positionsHtml = '';
+            positions.forEach(pos => {
+                const plClass = pos.unrealized_pl >= 0 ? 'profit' : 'loss';
+                positionsHtml += `
+                    <tr>
+                        <td><strong>${pos.symbol}</strong></td>
+                        <td>${pos.quantity}</td>
+                        <td>$${pos.avg_cost.toFixed(2)}</td>
+                        <td>$${pos.current_price.toFixed(2)}</td>
+                        <td>$${pos.market_value.toFixed(2)}</td>
+                        <td class="${plClass}">$${pos.unrealized_pl.toFixed(2)}</td>
+                        <td class="${plClass}">${pos.unrealized_pl_pct.toFixed(2)}%</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('positionsBody').innerHTML = positionsHtml;
+        } else {
+            document.getElementById('positionsBody').innerHTML = 
+                '<tr><td colspan="7" style="text-align: center; color: #666;">No positions</td></tr>';
+        }
+        
+        // Display transactions
+        if (transactions.length > 0) {
+            let transactionsHtml = '';
+            transactions.reverse().forEach(tx => {
+                const actionClass = tx.action === 'BUY' ? '' : 'sell';
+                const plText = tx.profit_loss !== undefined ? 
+                    ` | P/L: $${tx.profit_loss.toFixed(2)}` : '';
+                
+                transactionsHtml += `
+                    <div class="transaction-item ${actionClass}">
+                        <div>
+                            <strong style="color: ${tx.action === 'BUY' ? '#4caf50' : '#2196f3'}">
+                                ${tx.action}
+                            </strong>
+                        </div>
+                        <div>
+                            ${tx.quantity} ${tx.symbol} @ $${tx.price.toFixed(2)}${plText}
+                        </div>
+                        <div style="font-size: 0.85em; color: #666;">
+                            ${new Date(tx.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('transactionsList').innerHTML = transactionsHtml;
+        } else {
+            document.getElementById('transactionsList').innerHTML = 
+                '<p style="text-align: center; color: #666;">No transactions yet</p>';
+        }
+    }
+    
+    async function executeTrade() {
+        const action = document.getElementById('tradeAction').value;
+        const symbol = document.getElementById('tradeSymbol').value;
+        const quantity = parseInt(document.getElementById('tradeQuantity').value);
+        const price = parseFloat(document.getElementById('tradePrice').value);
+        
+        if (!quantity || quantity <= 0 || !price || price <= 0) {
+            showAlert('error', 'Please enter valid quantity and price');
+            return;
+        }
+        
+        setLoading(true, `Executing ${action}...`);
+        
+        try {
+            const response = await fetch(`${API_BASE}/portfolio/${currentPortfolioId}/trade`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, symbol, quantity, price })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showAlert('success', data.message);
+                await refreshPortfolio();
+            } else {
+                showAlert('error', data.error);
+            }
+        } catch (error) {
+            showAlert('error', 'Trade failed: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    async function getLatestPrice() {
+        const symbol = document.getElementById('tradeSymbol').value;
+        
+        setLoading(true, 'Fetching latest price...');
+        
+        try {
+            const response = await fetch(`${API_BASE}/historical/${symbol}`);
+            const data = await response.json();
+            
+            if (data.success && data.data.length > 0) {
+                const latestPrice = data.data[data.data.length - 1].close;
+                document.getElementById('tradePrice').value = latestPrice.toFixed(2);
+                showAlert('success', `Latest price: $${latestPrice.toFixed(2)}`);
+            } else {
+                showAlert('error', 'Could not fetch price');
+            }
+        } catch (error) {
+            showAlert('error', 'Failed to fetch price: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    function selectStrategy(strategyName) {
+        selectedStrategy = strategyName;
+        
+        // Update UI
+        document.querySelectorAll('.strategy-card').forEach(card => {
+            card.classList.remove('active');
+        });
+        event.target.closest('.strategy-card').classList.add('active');
+        
+        showAlert('info', `Selected strategy: ${strategyName}`);
+    }
+    
+    async function executeAutoStrategy() {
+        const symbol = document.getElementById('tradeSymbol').value;
+        
+        setLoading(true, 'Executing strategy...');
+        
+        try {
+            const response = await fetch(`${API_BASE}/portfolio/${currentPortfolioId}/strategy`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    symbol: symbol,
+                    strategy: selectedStrategy
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                let message = `Signal: ${data.signal}`;
+                if (data.executed) {
+                    message += ` - Trade executed!`;
+                } else {
+                    message += ` - ${data.reason}`;
+                }
+                
+                showAlert(data.executed ? 'success' : 'info', message);
+                
+                if (data.executed) {
+                    await refreshPortfolio();
+                }
+            } else {
+                showAlert('error', data.error);
+            }
+        } catch (error) {
+            showAlert('error', 'Strategy execution failed: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    async function backtestStrategy() {
+        const symbol = document.getElementById('tradeSymbol').value;
+        
+        setLoading(true, 'Running backtest...');
+        
+        try {
+            const response = await fetch(`${API_BASE}/portfolio/${currentPortfolioId}/backtest`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    symbol: symbol,
+                    strategy: selectedStrategy
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                displayBacktestResults(data);
+                showAlert('success', 'Backtest completed');
+            } else {
+                showAlert('error', data.error);
+            }
+        } catch (error) {
+            showAlert('error', 'Backtest failed: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    function displayBacktestResults(data) {
+        const metrics = data.metrics;
+        
+        alert(`Backtest Results:\n\n` +
+              `Strategy: ${data.strategy}\n` +
+              `Symbol: ${data.symbol}\n` +
+              `Total Return: ${metrics.total_return_pct.toFixed(2)}%\n` +
+              `Total Trades: ${data.total_trades}\n` +
+              `Win Rate: ${metrics.win_rate.toFixed(1)}%\n` +
+              `Sharpe Ratio: ${metrics.sharpe_ratio.toFixed(3)}`);
+    }
+    
+    async function loadPortfolioPerformance() {
+        try {
+            const response = await fetch(`${API_BASE}/portfolio/${currentPortfolioId}/performance`);
+            const data = await response.json();
+            
+            if (data.success && data.history.length > 0) {
+                plotPortfolioPerformance(data.history);
+            }
+        } catch (error) {
+            console.error('Failed to load performance:', error);
+        }
+    }
+    
+    function plotPortfolioPerformance(history) {
+        const trace = {
+            x: history.map(h => h.timestamp),
+            y: history.map(h => h.total_value),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Portfolio Value',
+            line: { color: '#4caf50', width: 3 },
+            marker: { size: 6 }
+        };
+        
+        const layout = {
+            title: 'Portfolio Performance Over Time',
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Value ($)' },
+            plot_bgcolor: '#f8f9fa',
+            paper_bgcolor: 'white',
+            showlegend: true
+        };
+        
+        Plotly.newPlot('portfolioPerformanceChart', [trace], layout, {responsive: true});
+    }
+    
+    // Auto-refresh portfolio every 30 seconds if loaded
+    setInterval(() => {
+        if (currentPortfolioId && document.getElementById('portfolioMetricsSection').style.display !== 'none') {
+            refreshPortfolio();
+        }
+    }, 30000);
 
     </script>
 </body>

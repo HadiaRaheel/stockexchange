@@ -9,5 +9,27 @@
       "mape": 1.0048828034819297
     },
     "version": null
+  },
+  {
+    "timestamp": "2025-11-10T22:59:28.714791",
+    "model_name": "Ensemble",
+    "symbol": "AAPL",
+    "metrics": {
+      "rmse": 1.3696269094969011,
+      "mae": 1.3696269094969011,
+      "mape": 0.5079088077196192
+    },
+    "version": null
+  },
+  {
+    "timestamp": "2025-11-10T22:59:28.714791",
+    "model_name": "Ensemble",
+    "symbol": "AAPL",
+    "metrics": {
+      "rmse": 1.3696269094969011,
+      "mae": 1.3696269094969011,
+      "mape": 0.5079088077196192
+    },
+    "version": "Ensemble_AAPL_20251110_225928"
   }
 ]

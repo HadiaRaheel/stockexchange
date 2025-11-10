@@ -1,0 +1,84 @@
+{
+  "Ensemble_AAPL": {
+    "versions": [
+      {
+        "version_id": 1,
+        "timestamp": "2025-11-10T12:38:18.170269",
+        "metrics": {
+          "rmse": 2.1148447352694575,
+          "mae": 2.1148447352694575,
+          "mape": 0.7878863830840349
+        },
+        "path": "models\\Ensemble_AAPL_v1.pkl"
+      },
+      {
+        "version_id": 2,
+        "timestamp": "2025-11-10T12:39:19.091147",
+        "metrics": {
+          "rmse": 9.377787561585306,
+          "mae": 8.395176901566128,
+          "mape": 3.1860873699945134
+        },
+        "path": "models\\Ensemble_AAPL_v2.pkl"
+      },
+      {
+        "version_id": 3,
+        "timestamp": "2025-11-10T15:48:35.410020",
+        "metrics": {
+          "rmse": 2.1148447352694575,
+          "mae": 2.1148447352694575,
+          "mape": 0.7878863830840349
+        },
+        "path": "models\\Ensemble_AAPL_v3.pkl"
+      },
+      {
+        "version_id": 4,
+        "timestamp": "2025-11-10T16:15:08.278079",
+        "metrics": {
+          "rmse": 2.1148447352694575,
+          "mae": 2.1148447352694575,
+          "mape": 0.7878863830840349
+        },
+        "path": "models\\Ensemble_AAPL_v4.pkl"
+      },
+      {
+        "version_id": 5,
+        "timestamp": "2025-11-10T16:30:17.717702",
+        "metrics": {
+          "rmse": 2.1148447352694575,
+          "mae": 2.1148447352694575,
+          "mape": 0.7878863830840349
+        },
+        "path": "models\\Ensemble_AAPL_v5.pkl"
+      },
+      {
+        "version_id": 6,
+        "timestamp": "2025-11-10T16:39:02.969654",
+        "metrics": {
+          "rmse": 4.1372575559353395,
+          "mae": 3.527789019377046,
+          "mape": 1.3094498883161771
+        },
+        "path": "models\\Ensemble_AAPL_v6.pkl"
+      }
+    ],
+    "best_version": 1,
+    "best_rmse": 2.1148447352694575
+  },
+  "LSTM_AAPL": {
+    "versions": [
+      {
+        "version_id": 1,
+        "timestamp": "2025-11-10T12:40:18.639861",
+        "metrics": {
+          "rmse": 4.85718736254961,
+          "mae": 4.85718736254961,
+          "mape": 1.8095473957113448
+        },
+        "path": "models\\LSTM_AAPL_v1.pkl"
+      }
+    ],
+    "best_version": 1,
+    "best_rmse": 4.85718736254961
+  }
+}

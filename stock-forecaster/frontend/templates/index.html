@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Forecasting Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        select, input, button {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #chart {
+            width: 100%;
+            height: 600px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert.active {
+            display: block;
+        }
+        
+        .alert.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .alert.warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .alert.success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .alert.info {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .comparison {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .comparison h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .best-model {
+            background: #c8e6c9 !important;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Stock Forecasting Application</h1>
+            <p class="subtitle">Advanced ML-based Financial Forecasting</p>
+        </header>
+        
+        <div class="alert error" id="errorMsg"></div>
+        <div class="alert warning" id="warningMsg"></div>
+        <div class="alert success" id="successMsg"></div>
+        <div class="alert info" id="infoMsg"></div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="symbolSelect">Financial Instrument</label>
+                <select id="symbolSelect">
+                    <option value="AAPL">Apple (AAPL)</option>
+                    <option value="GOOGL">Google (GOOGL)</option>
+                    <option value="MSFT">Microsoft (MSFT)</option>
+                    <option value="TSLA">Tesla (TSLA)</option>
+                    <option value="BTC-USD">Bitcoin (BTC-USD)</option>
+                    <option value="ETH-USD">Ethereum (ETH-USD)</option>
+                    <option value="EURUSD=X">EUR/USD</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="horizonSelect">Forecast Horizon</label>
+                <select id="horizonSelect">
+                    <option value="1">1 Hour</option>
+                    <option value="3">3 Hours</option>
+                    <option value="24">24 Hours</option>
+                    <option value="72">72 Hours</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="modelSelect">Model Type</label>
+                <select id="modelSelect">
+                    <option value="ensemble">Ensemble (Recommended)</option>
+                    <option value="lstm">LSTM Neural Network</option>
+                    <option value="arima">ARIMA Traditional</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="forecastBtn" onclick="generateForecast()">Generate Forecast</button>
+            </div>
+            
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button id="compareBtn" onclick="compareModels()">Compare Models</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loadingText">Generating forecast...</p>
+        </div>
+        
+        <div id="chart"></div>
+        
+        <div class="metrics" id="metrics" style="display: none;">
+            <div class="metric-card">
+                <div class="metric-label">RMSE</div>
+                <div class="metric-value" id="rmseValue">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">MAE</div>
+                <div class="metric-value" id="maeValue">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">MAPE (%)</div>
+                <div class="metric-value" id="mapeValue">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Model Used</div>
+                <div class="metric-value" id="modelValue">-</div>
+            </div>
+        </div>
+        
+        <div class="comparison" id="comparison" style="display: none;">
+            <h3>Model Comparison</h3>
+            <table id="comparisonTable">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>RMSE</th>
+                        <th>MAE</th>
+                        <th>MAPE (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="comparisonBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        function showAlert(type, message) {
+            hideAllAlerts();
+            const alertId = type + 'Msg';
+            const alertEl = document.getElementById(alertId);
+            alertEl.textContent = message;
+            alertEl.classList.add('active');
+            
+            setTimeout(() => {
+                alertEl.classList.remove('active');
+            }, 5000);
+        }
+        
+        function hideAllAlerts() {
+            document.querySelectorAll('.alert').forEach(el => {
+                el.classList.remove('active');
+            });
+        }
+        
+        function setLoading(isLoading, message = 'Processing...') {
+            const loadingEl = document.getElementById('loading');
+            const forecastBtn = document.getElementById('forecastBtn');
+            const compareBtn = document.getElementById('compareBtn');
+            const loadingText = document.getElementById('loadingText');
+            
+            if (isLoading) {
+                loadingEl.classList.add('active');
+                forecastBtn.disabled = true;
+                compareBtn.disabled = true;
+                loadingText.textContent = message;
+            } else {
+                loadingEl.classList.remove('active');
+                forecastBtn.disabled = false;
+                compareBtn.disabled = false;
+            }
+        }
+        
+        window.onload = function() {
+            loadHistoricalData();
+        };
+        
+        async function loadHistoricalData() {
+            const symbol = document.getElementById('symbolSelect').value;
+            
+            try {
+                showAlert('info', `Loading historical data for ${symbol}...`);
+                const response = await fetch(`${API_BASE}/historical/${symbol}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    plotCandlestick(data.data, []);
+                    hideAllAlerts();
+                } else {
+                    showAlert('error', data.error || 'Failed to load historical data');
+                }
+            } catch (error) {
+                showAlert('error', 'Network error: Could not connect to server');
+                console.error('Error:', error);
+            }
+        }
+        
+        async function generateForecast() {
+            const symbol = document.getElementById('symbolSelect').value;
+            const horizon = parseInt(document.getElementById('horizonSelect').value);
+            const model = document.getElementById('modelSelect').value;
+            
+            setLoading(true, `Generating ${model.toUpperCase()} forecast for ${symbol}...`);
+            hideAllAlerts();
+            
+            try {
+                const histResponse = await fetch(`${API_BASE}/historical/${symbol}`);
+                const histData = await histResponse.json();
+                
+                if (!histData.success) {
+                    showAlert('error', histData.error);
+                    setLoading(false);
+                    return;
+                }
+                
+                const forecastResponse = await fetch(`${API_BASE}/forecast`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, horizon, model })
+                });
+                
+                const forecastData = await forecastResponse.json();
+                
+                if (forecastData.success) {
+                    plotCandlestick(histData.data, forecastData.forecast);
+                    
+                    document.getElementById('metrics').style.display = 'grid';
+                    
+                    if (forecastData.metrics.rmse !== null) {
+                        document.getElementById('rmseValue').textContent = 
+                            '$' + forecastData.metrics.rmse.toFixed(2);
+                    } else {
+                        document.getElementById('rmseValue').textContent = 'N/A';
+                    }
+                    
+                    if (forecastData.metrics.mae !== null) {
+                        document.getElementById('maeValue').textContent = 
+                            '$' + forecastData.metrics.mae.toFixed(2);
+                    } else {
+                        document.getElementById('maeValue').textContent = 'N/A';
+                    }
+                    
+                    if (forecastData.metrics.mape !== null) {
+                        document.getElementById('mapeValue').textContent = 
+                            forecastData.metrics.mape.toFixed(2) + '%';
+                    } else {
+                        document.getElementById('mapeValue').textContent = 'N/A';
+                    }
+                    
+                    document.getElementById('modelValue').textContent = 
+                        forecastData.model;
+                    
+                    showAlert('success', `Forecast generated successfully using ${forecastData.model} model!`);
+                } else {
+                    showAlert('error', forecastData.error || 'Failed to generate forecast');
+                }
+            } catch (error) {
+                showAlert('error', 'Network error: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function compareModels() {
+            const symbol = document.getElementById('symbolSelect').value;
+            const horizon = parseInt(document.getElementById('horizonSelect').value);
+            
+            setLoading(true, 'Comparing all models... This may take a minute.');
+            hideAllAlerts();
+            
+            try {
+                const response = await fetch(`${API_BASE}/compare-models`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, horizon })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayComparison(data.results);
+                    showAlert('success', 'Model comparison completed!');
+                } else {
+                    showAlert('error', data.error || 'Failed to compare models');
+                }
+            } catch (error) {
+                showAlert('error', 'Network error: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        function plotCandlestick(historicalData, forecastData) {
+            const candlestick = {
+                x: historicalData.map(d => d.x),
+                open: historicalData.map(d => d.open),
+                high: historicalData.map(d => d.high),
+                low: historicalData.map(d => d.low),
+                close: historicalData.map(d => d.close),
+                type: 'candlestick',
+                name: 'Historical',
+                increasing: { line: { color: '#26a69a' } },
+                decreasing: { line: { color: '#ef5350' } }
+            };
+            
+            const traces = [candlestick];
+            
+            if (forecastData.length > 0) {
+                const forecast = {
+                    x: forecastData.map(d => d.x),
+                    y: forecastData.map(d => d.y),
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Forecast',
+                    line: { color: '#ff9800', width: 3, dash: 'dash' },
+                    marker: { size: 8, color: '#ff9800' }
+                };
+                traces.push(forecast);
+            }
+            
+            const layout = {
+                title: {
+                    text: 'Stock Price with Forecast',
+                    font: { size: 20, color: '#333' }
+                },
+                xaxis: {
+                    title: 'Date',
+                    rangeslider: { visible: false }
+                },
+                yaxis: { 
+                    title: 'Price (USD)',
+                    fixedrange: false
+                },
+                showlegend: true,
+                hovermode: 'x unified',
+                plot_bgcolor: '#f8f9fa',
+                paper_bgcolor: 'white',
+                margin: { t: 50, r: 50, b: 50, l: 70 }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+            
+            Plotly.newPlot('chart', traces, layout, config);
+        }
+        
+        function displayComparison(results) {
+            const tbody = document.getElementById('comparisonBody');
+            tbody.innerHTML = '';
+            
+            let bestRMSE = Infinity;
+            let bestModel = '';
+            
+            for (const [model, metrics] of Object.entries(results)) {
+                if (metrics.rmse < bestRMSE && metrics.rmse < 999) {
+                    bestRMSE = metrics.rmse;
+                    bestModel = model;
+                }
+            }
+            
+            for (const [model, metrics] of Object.entries(results)) {
+                const row = tbody.insertRow();
+                if (model === bestModel) {
+                    row.classList.add('best-model');
+                }
+                
+                row.insertCell(0).textContent = model + (model === bestModel ? ' ⭐' : '');
+                
+                if (metrics.rmse < 999) {
+                    row.insertCell(1).textContent = '$' + metrics.rmse.toFixed(2);
+                    row.insertCell(2).textContent = '$' + metrics.mae.toFixed(2);
+                    row.insertCell(3).textContent = metrics.mape !== null ? 
+                        metrics.mape.toFixed(2) + '%' : 'N/A';
+                } else {
+                    row.insertCell(1).textContent = 'Failed';
+                    row.insertCell(2).textContent = 'Failed';
+                    row.insertCell(3).textContent = 'Failed';
+                }
+            }
+            
+            document.getElementById('comparison').style.display = 'block';
+        }
+        
+        document.getElementById('symbolSelect').addEventListener('change', function() {
+            document.getElementById('metrics').style.display = 'none';
+            document.getElementById('comparison').style.display = 'none';
+            loadHistoricalData();
+        });
+    </script>
+</body>
+</html>

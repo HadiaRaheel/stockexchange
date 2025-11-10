@@ -59,23 +59,77 @@ def validate_data(data, min_points=MIN_DATA_POINTS):
     return True, "Data is valid"
 
 
+# def calculate_metrics(actual, predicted):
+#     """
+#     Calculate performance metrics safely
+#     Returns dict with rmse, mae, mape or None if calculation fails
+#     """
+#     try:
+#         # Ensure arrays are same length
+#         min_len = min(len(actual), len(predicted))
+#         actual = np.array(actual[:min_len])
+#         predicted = np.array(predicted[:min_len])
+        
+#         # Check for valid data
+#         if len(actual) == 0:
+#             return None
+        
+#         # Calculate RMSE
+#         rmse = float(np.sqrt(np.mean((actual - predicted) ** 2)))
+        
+#         # Calculate MAE
+#         mae = float(np.mean(np.abs(actual - predicted)))
+        
+#         # Calculate MAPE (handle division by zero)
+#         mask = np.abs(actual) > 1e-8
+#         if np.any(mask):
+#             mape = float(np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100)
+#         else:
+#             mape = None
+        
+#         return {
+#             'rmse': rmse,
+#             'mae': mae,
+#             'mape': mape
+#         }
+#     except Exception as e:
+#         logger.error(f"Error calculating metrics: {e}")
+#         return None
+
 def calculate_metrics(actual, predicted):
     """
-    Calculate performance metrics safely
+    Calculate performance metrics safely with better error handling
     Returns dict with rmse, mae, mape or None if calculation fails
     """
     try:
+        # Convert to numpy arrays
+        actual = np.array(actual, dtype=np.float64)
+        predicted = np.array(predicted, dtype=np.float64)
+        
         # Ensure arrays are same length
-        min_len = min(len(actual), len(predicted))
-        actual = np.array(actual[:min_len])
-        predicted = np.array(predicted[:min_len])
+        if len(actual) != len(predicted):
+            logger.warning(f"Length mismatch: actual={len(actual)}, predicted={len(predicted)}")
+            min_len = min(len(actual), len(predicted))
+            actual = actual[:min_len]
+            predicted = predicted[:min_len]
         
         # Check for valid data
         if len(actual) == 0:
+            logger.error("Empty arrays passed to calculate_metrics")
+            return None
+        
+        # Check for NaN or Inf
+        if np.any(np.isnan(actual)) or np.any(np.isnan(predicted)):
+            logger.error("NaN values detected in metrics calculation")
+            return None
+        
+        if np.any(np.isinf(actual)) or np.any(np.isinf(predicted)):
+            logger.error("Inf values detected in metrics calculation")
             return None
         
         # Calculate RMSE
-        rmse = float(np.sqrt(np.mean((actual - predicted) ** 2)))
+        mse = np.mean((actual - predicted) ** 2)
+        rmse = float(np.sqrt(mse))
         
         # Calculate MAE
         mae = float(np.mean(np.abs(actual - predicted)))
@@ -85,7 +139,11 @@ def calculate_metrics(actual, predicted):
         if np.any(mask):
             mape = float(np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100)
         else:
-            mape = None
+            mape = 0.0
+        
+        # Sanity check on values
+        if rmse > 1e6 or mae > 1e6 or mape > 1e6:
+            logger.warning(f"Suspiciously large metrics: RMSE={rmse}, MAE={mae}, MAPE={mape}")
         
         return {
             'rmse': rmse,
@@ -94,6 +152,7 @@ def calculate_metrics(actual, predicted):
         }
     except Exception as e:
         logger.error(f"Error calculating metrics: {e}")
+        logger.error(traceback.format_exc())
         return None
 
 
@@ -185,7 +244,92 @@ def get_historical_data(symbol):
             'error': f'Server error while fetching data: {str(e)}'
         }), 500
 
-# NEW ROUTE 1: Incremental model update
+# # NEW ROUTE 1: Incremental model update
+# @app.route('/api/update-model', methods=['POST'])
+# def update_model_incremental():
+#     """
+#     Incrementally update model with new data
+#     """
+#     try:
+#         data = request.json
+        
+#         symbol = data.get('symbol')
+#         model_type = data.get('model', 'lstm')
+        
+#         if not symbol:
+#             return jsonify({'success': False, 'error': 'Symbol is required'}), 400
+        
+#         logger.info(f"Performing incremental update for {symbol} ({model_type})")
+        
+#         # Fetch latest data
+#         df = data_fetcher.fetch_historical_data(symbol, period='1mo', interval='1d')
+        
+#         if df is None or df.empty:
+#             return jsonify({
+#                 'success': False,
+#                 'error': 'No data available for update'
+#             }), 404
+        
+#         new_data = df['Close'].values
+        
+#         # Perform incremental update
+#         if model_type == 'lstm':
+#             updated_model = adaptive_learner.incremental_update(
+#                 lstm_model, 
+#                 new_data, 
+#                 model_type='lstm'
+#             )
+#             validation_size = min(len(new_data), MIN_DATA_POINTS)
+#             train_data = new_data[:-validation_size]
+#             validation_data = new_data[-validation_size:]
+            
+#             try:
+#                 validation_pred = lstm_model.predict(train_data, validation_size)
+#                 metrics = calculate_metrics(validation_data, validation_pred)
+#             except Exception as e:
+#                 logger.warning(f"Metrics calculation failed: {e}")
+#                 metrics = None
+#             if metrics is None:
+#                 metrics = {'rmse': None, 'mae': None, 'mape': None}
+#             else:
+#                 for key in ['rmse', 'mae', 'mape']:
+#                     if key not in metrics:
+#                         metrics[key] = None
+#                         # Save updated version
+#             version = adaptive_learner.save_model_version(
+#                 updated_model,
+#                 'LSTM',
+#                 symbol,
+#                 metrics 
+#             )
+            
+#             return jsonify({
+#                 'success': True,
+#                 'message': f'Model updated incrementally',
+#                 'version': version,
+#                 'data_points': len(new_data)
+#             })
+        
+#         elif model_type == 'ensemble':
+#             # Update ensemble weights adaptively
+#             return jsonify({
+#                 'success': True,
+#                 'message': 'Ensemble weights will be updated on next prediction'
+#             })
+        
+#         else:
+#             return jsonify({
+#                 'success': False,
+#                 'error': f'Incremental update not supported for {model_type}'
+#             }), 400
+    
+#     except Exception as e:
+#         logger.error(f"Update error: {e}")
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
+
 @app.route('/api/update-model', methods=['POST'])
 def update_model_incremental():
     """
@@ -203,7 +347,7 @@ def update_model_incremental():
         logger.info(f"Performing incremental update for {symbol} ({model_type})")
         
         # Fetch latest data
-        df = data_fetcher.fetch_historical_data(symbol, period='1mo', interval='1d')
+        df = data_fetcher.fetch_historical_data(symbol, period='6mo', interval='1d')  # Increased period
         
         if df is None or df.empty:
             return jsonify({
@@ -213,28 +357,101 @@ def update_model_incremental():
         
         new_data = df['Close'].values
         
+        # Ensure we have enough data
+        if len(new_data) < MIN_DATA_POINTS * 2:
+            return jsonify({
+                'success': False,
+                'error': f'Insufficient data: need at least {MIN_DATA_POINTS * 2} points, got {len(new_data)}'
+            }), 400
+        
         # Perform incremental update
         if model_type == 'lstm':
+            # Calculate proper validation size (20% of data, minimum 30 points)
+            validation_size = max(30, min(len(new_data) // 5, 60))
+            train_data = new_data[:-validation_size]
+            validation_data = new_data[-validation_size:]
+            
+            logger.info(f"Train size: {len(train_data)}, Validation size: {len(validation_data)}")
+            
+            # Validate we have enough training data
+            if len(train_data) < MIN_DATA_POINTS:
+                return jsonify({
+                    'success': False,
+                    'error': f'Insufficient training data after split'
+                }), 400
+            
+            # Perform incremental update
             updated_model = adaptive_learner.incremental_update(
                 lstm_model, 
                 new_data, 
                 model_type='lstm'
             )
             
-            # Save updated version
-            version = adaptive_learner.save_model_version(
-                updated_model,
-                'LSTM',
-                symbol,
-                {'updated': True}
-            )
+            # Calculate metrics with error handling
+            metrics = None
+            try:
+                logger.info("Generating validation predictions...")
+                validation_pred = updated_model.predict(train_data, validation_size)
+                
+                # Ensure predictions are valid
+                if validation_pred is None or len(validation_pred) == 0:
+                    logger.warning("Model returned empty predictions")
+                elif len(validation_pred) != len(validation_data):
+                    logger.warning(f"Prediction length mismatch: {len(validation_pred)} vs {len(validation_data)}")
+                    # Truncate to shorter length
+                    min_len = min(len(validation_pred), len(validation_data))
+                    validation_pred = validation_pred[:min_len]
+                    validation_data = validation_data[:min_len]
+                    metrics = calculate_metrics(validation_data, validation_pred)
+                else:
+                    metrics = calculate_metrics(validation_data, validation_pred)
+                
+                if metrics:
+                    logger.info(f"Calculated metrics - RMSE: ${metrics.get('rmse', 0):.2f}, MAE: ${metrics.get('mae', 0):.2f}")
+                else:
+                    logger.warning("Metrics calculation returned None")
+                    
+            except Exception as e:
+                logger.error(f"Metrics calculation failed: {e}")
+                logger.error(traceback.format_exc())
             
-            return jsonify({
-                'success': True,
-                'message': f'Model updated incrementally',
-                'version': version,
-                'data_points': len(new_data)
-            })
+            # Only save model version if we have valid metrics
+            if metrics and metrics.get('rmse') is not None:
+                # Ensure all required keys are present
+                if 'mae' not in metrics:
+                    metrics['mae'] = metrics['rmse']  # Use RMSE as fallback
+                if 'mape' not in metrics or metrics['mape'] is None:
+                    metrics['mape'] = 0.0  # Default value
+                
+                version = adaptive_learner.save_model_version(
+                    updated_model,
+                    'LSTM',
+                    symbol,
+                    metrics 
+                )
+                
+                # Log performance
+                adaptive_learner.log_performance(
+                    'LSTM',
+                    symbol,
+                    metrics,
+                    version=version
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Model updated incrementally',
+                    'version': version,
+                    'data_points': len(new_data),
+                    'metrics': metrics
+                })
+            else:
+                # Don't save if metrics are invalid
+                return jsonify({
+                    'success': False,
+                    'error': 'Model update completed but metrics calculation failed',
+                    'message': 'Try again with more data or check data quality'
+                }), 400
         
         elif model_type == 'ensemble':
             # Update ensemble weights adaptively
@@ -251,10 +468,18 @@ def update_model_incremental():
     
     except Exception as e:
         logger.error(f"Update error: {e}")
+        logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
+
+
+
+
+
+
 
 
 # NEW ROUTE 2: Get performance history
